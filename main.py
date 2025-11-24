@@ -1,8 +1,10 @@
 import sys
 import pygame
 import chess
+import tkinter as tk
+from tkinter import filedialog
 from src.config import *
-from src.ui import TextInput, LeaderboardView, DisplayBoard, THEMES
+from src.ui import TextInput, LeaderboardView, DisplayBoard, THEMES, EvaluationBar
 from src.engine import Engine
 from src.scoring import ScoreManager
 from src.ai import get_best_move, evaluate_board
@@ -62,23 +64,18 @@ def main():
     pygame.display.set_caption("PyChess Desktop")
     clock = pygame.time.Clock()
 
-
     # Inicialização
     engine = Engine()
     engine.start()
     score_manager = ScoreManager()
     sound_manager = SoundManager()
-
+    
     # UI Components
     tema_atual = 'classico'
     display_board = DisplayBoard(screen, tamanho_quadrado=80, tema=tema_atual)
-
-    # Importação local para evitar ciclo, ou mova EvaluationBar para ui.py completamente
-    from src.ui import EvaluationBar 
     eval_bar = EvaluationBar(pygame.Rect(640, 0, 20, 640))
-
     input_nome = TextInput(pygame.font.SysFont("consolas", 30), rect=pygame.Rect(170, 300, 300, 50))
-
+    
     # Fontes
     fonte_titulo = pygame.font.SysFont("arial", 40, bold=True)
     fonte_btn = pygame.font.SysFont("arial", 28)
@@ -102,42 +99,53 @@ def main():
     cor_promocao_pendente = None
     quadrado_promocao = None
 
-    # --- Replay/Simulação ---
+    # Replay/Simulação
     pgn_manager = PGNManager()
-    sim_moves = []      # Lista de movimentos carregados
-    sim_index = 0       # Em qual movimento estamos (0 = início)
-    sim_auto = False    # Play/Pause
-    sim_speed = 1000    # Delay em ms (1 segundo)
-    sim_timer = 0       # Cronômetro interno
-    sim_headers = {}    # Nomes dos jogadores
+    sim_moves = []
+    sim_index = 0
+    sim_auto = False
+    sim_speed = 1000
+    sim_timer = 0
+    sim_headers = {}
 
     while True:
         dt = clock.tick(60)
         
-        # --- LÓGICA DE TEMPO ---
+        # --- LÓGICA DE TEMPO E UPDATE ---
         if estado_atual == ESTADO_JOGANDO and not engine.is_game_over():
             engine.update_timer(dt / 1000.0)
+        
+        if estado_atual == ESTADO_SIMULACAO and sim_auto:
+            sim_timer += dt
+            if sim_timer >= sim_speed:
+                sim_timer = 0
+                if sim_index < len(sim_moves):
+                    move = sim_moves[sim_index]
+                    realizar_jogada(engine, move, display_board, sound_manager)
+                    sim_index += 1
+                else:
+                    sim_auto = False
 
         # --- PROCESSAMENTO DE EVENTOS ---
         eventos = pygame.event.get()
         for event in eventos:
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                pygame.quit(); sys.exit()
 
             # Atalho Global M para Menu
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_m and estado_atual != ESTADO_MENU:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_m and estado_atual != ESTADO_INPUT_NOME:
                 engine.start()
                 estado_atual = ESTADO_MENU
+                sound_manager.play('menu')
                 continue
 
-            # ---------------- ESTADO: MENU ----------------
+            # --- ESTADO: MENU ---
             if estado_atual == ESTADO_MENU:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    # Definição dos botões (apenas lógica de colisão)
                     btn_novo = pygame.Rect(260, 250, 320, 50)
                     btn_pont = pygame.Rect(260, 320, 320, 50)
                     btn_tema = pygame.Rect(260, 390, 320, 50)
+                    btn_replay = pygame.Rect(260, 460, 320, 50)
                     btn_som = pygame.Rect(760, 20, 60, 40)
 
                     if btn_novo.collidepoint(event.pos):
@@ -149,47 +157,135 @@ def main():
                     elif btn_tema.collidepoint(event.pos):
                         sound_manager.play('menu')
                         estado_atual = ESTADO_TEMA
+                    elif btn_replay.collidepoint(event.pos):
+                        sound_manager.play('menu')
+                        estado_atual = ESTADO_PGN_SELECT
                     elif btn_som.collidepoint(event.pos):
                         sound_manager.enabled = not sound_manager.enabled
                         if sound_manager.enabled: sound_manager.play('menu')
 
-            # ---------------- ESTADO: TEMAS ----------------
-            elif estado_atual == ESTADO_TEMA:
+            # --- ESTADO: PGN SELECT ---
+            elif estado_atual == ESTADO_PGN_SELECT:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    # Lógica de clique nos temas
-                    temas_lista = ['classico', 'torneio', 'dark', 'retro']
-                    btn_voltar = pygame.Rect(320, 520, 200, 44)
+                    mouse_pos = event.pos
+                    arquivos = pgn_manager.list_files()
+                    y_start = 120
                     
-                    if btn_voltar.collidepoint(event.pos):
+                    # Clique na lista
+                    for i, arq in enumerate(arquivos):
+                        if i > 10: break
+                        rect = pygame.Rect(220, y_start + i*45, 400, 40)
+                        if rect.collidepoint(mouse_pos):
+                            sim_moves, sim_headers = pgn_manager.load_game_moves(arq)
+                            engine.board.reset()
+                            sim_index = 0
+                            sim_auto = False
+                            sim_timer = 0
+                            if sim_moves:
+                                estado_atual = ESTADO_SIMULACAO
+                                sound_manager.play('menu')
+
+                    # Botões inferiores
+                    btn_abrir = pygame.Rect(220, 500, 200, 40)
+                    btn_voltar = pygame.Rect(440, 500, 200, 40)
+
+                    if btn_voltar.collidepoint(mouse_pos):
                         sound_manager.play('menu')
                         estado_atual = ESTADO_MENU
-                    
-                    for i, tema in enumerate(temas_lista):
-                        btn_rect = pygame.Rect(220, 180 + i*80, 400, 60)
-                        if btn_rect.collidepoint(event.pos):
-                            tema_atual = tema
-                            display_board.set_tema(tema)
-                            sound_manager.play('menu')
+                    elif btn_abrir.collidepoint(mouse_pos):
+                        try:
+                            root = tk.Tk()
+                            root.withdraw()
+                            root.attributes('-topmost', True)
+                            file_path = filedialog.askopenfilename(title="Selecione PGN", filetypes=[("PGN", "*.pgn"), ("All", "*.*")])
+                            root.destroy()
+                            if file_path:
+                                f = open(file_path, "r", encoding="utf-8")
+                                game = chess.pgn.read_game(f)
+                                if game:
+                                    sim_moves = [m for m in game.mainline_moves()]
+                                    sim_headers = dict(game.headers)
+                                    f.close()
+                                    if sim_moves:
+                                        engine.board.reset()
+                                        sim_index = 0
+                                        sim_auto = False
+                                        estado_atual = ESTADO_SIMULACAO
+                                        sound_manager.play('menu')
+                        except Exception as e:
+                            print(f"Erro: {e}")
 
-            # ---------------- ESTADO: ESCOLHA COR ----------------
+            # --- ESTADO: SIMULAÇÃO ---
+            elif estado_atual == ESTADO_SIMULACAO:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RIGHT:
+                        if sim_index < len(sim_moves):
+                            move = sim_moves[sim_index]
+                            realizar_jogada(engine, move, display_board, sound_manager)
+                            sim_index += 1
+                            sim_auto = False
+                    elif event.key == pygame.K_LEFT:
+                        if sim_index > 0:
+                            engine.board.pop()
+                            sim_index -= 1
+                            sim_auto = False
+                            sound_manager.play('move')
+                    elif event.key == pygame.K_SPACE:
+                        sim_auto = not sim_auto
+                    elif event.key == pygame.K_ESCAPE:
+                        engine.start()
+                        estado_atual = ESTADO_PGN_SELECT
+
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    mx, my = event.pos
+                    # Botões do player
+                    btns = [
+                        pygame.Rect(670, 220, 30, 30), # <<
+                        pygame.Rect(710, 220, 30, 30), # <
+                        pygame.Rect(750, 220, 40, 30), # Play
+                        pygame.Rect(800, 220, 30, 30), # >
+                        pygame.Rect(840, 220, 30, 30), # >>
+                        pygame.Rect(670, 260, 160, 30) # Speed
+                    ]
+                    if btns[0].collidepoint(mx, my): # Reset
+                        while sim_index > 0: engine.board.pop(); sim_index -= 1
+                        sim_auto = False; sound_manager.play('move')
+                    elif btns[1].collidepoint(mx, my): # Prev
+                        if sim_index > 0: engine.board.pop(); sim_index -= 1; sim_auto = False; sound_manager.play('move')
+                    elif btns[2].collidepoint(mx, my): # Pause
+                        sim_auto = not sim_auto
+                    elif btns[3].collidepoint(mx, my): # Next
+                        if sim_index < len(sim_moves):
+                            move = sim_moves[sim_index]
+                            realizar_jogada(engine, move, display_board, sound_manager)
+                            sim_index += 1; sim_auto = False
+                    elif btns[4].collidepoint(mx, my): # End
+                        while sim_index < len(sim_moves):
+                            realizar_jogada(engine, sim_moves[sim_index], display_board, sound_manager)
+                            sim_index += 1
+                        sim_auto = False
+                    elif btns[5].collidepoint(mx, my): # Speed
+                        if sim_speed <= 200: sim_speed = 1000
+                        else: sim_speed = 200
+
+            # --- ESTADO: ESCOLHA COR ---
             elif estado_atual == ESTADO_ESCOLHA_COR:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    # Botões
                     start_x = 220
                     # Dificuldade
                     for i in range(4):
-                        r = pygame.Rect(start_x + i*105, 120, 95, 40)
+                        r = pygame.Rect(start_x + i*105, 150, 95, 40)
                         if r.collidepoint(event.pos):
                             dificuldade = i + 1
                             sound_manager.play('move')
                     # Tempo
                     tempos_valores = [300, 600, None]
                     for i, val in enumerate(tempos_valores):
-                        r = pygame.Rect(start_x + i*140, 220, 130, 40)
+                        r = pygame.Rect(start_x + i*140, 250, 130, 40)
                         if r.collidepoint(event.pos):
                             tempo_escolhido = val
                             sound_manager.play('move')
-                    # Cor
+                    # Botões Jogar
                     btn_brancas = pygame.Rect(180, 330, 220, 50)
                     btn_pretas = pygame.Rect(420, 330, 220, 50)
                     
@@ -207,71 +303,81 @@ def main():
                         engine.start(time_limit=tempo_escolhido)
                         sound_manager.play('menu')
                         estado_atual = ESTADO_JOGANDO
-                        # IA joga primeiro se for brancas
                         if engine.board.turn == chess.WHITE:
                             move = get_best_move(engine.board, dificuldade)
                             if move:
                                 engine.board.push(move)
                                 tocar_som_acao(engine.board, move, sound_manager, acao='move')
 
-            # ---------------- ESTADO: JOGANDO ----------------
+            # --- ESTADO: TEMA ---
+            elif estado_atual == ESTADO_TEMA:
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    btn_voltar = pygame.Rect(320, 520, 200, 44)
+                    if btn_voltar.collidepoint(event.pos):
+                        sound_manager.play('menu')
+                        estado_atual = ESTADO_MENU
+                    
+                    temas_lista = ['classico', 'torneio', 'dark', 'retro']
+                    for i, tema in enumerate(temas_lista):
+                        btn_rect = pygame.Rect(220, 180 + i*80, 400, 60)
+                        if btn_rect.collidepoint(event.pos):
+                            tema_atual = tema
+                            display_board.set_tema(tema)
+                            sound_manager.play('menu')
+
+            # --- ESTADO: JOGANDO ---
             elif estado_atual == ESTADO_JOGANDO and not aguardando_ia:
+                # Atalhos
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_z and (pygame.key.get_mods() & pygame.KMOD_CTRL):
                         if len(engine.board.move_stack) >= 2:
                             display_board.active_animation = None
-                            display_board.animating_dest_square = None
                             engine.board.pop(); engine.board.pop()
-                            selecionado = None
-                            sound_manager.play('undo')
+                            selecionado = None; sound_manager.play('undo')
                     elif event.key == pygame.K_h:
                         move = get_best_move(engine.board, dificuldade)
                         if move:
                             selecionado = move.from_square
-                            ultima_dica_ia = f"Dica: {chess.square_name(move.from_square)} -> {chess.square_name(move.to_square)}"
+                            ultima_dica_ia = f"Dica: {chess.square_name(move.from_square)}->{chess.square_name(move.to_square)}"
                             sound_manager.play('hint')
                     elif event.key == pygame.K_s:
-                        sound_manager.enabled = not sound_manager.enabled
+                        if (pygame.key.get_mods() & pygame.KMOD_CTRL): # Ctrl+S = Salvar
+                            result = engine.board.result()
+                            nome = pgn_manager.save_game(engine.board, "Brancas" if jogador_brancas else "IA", "IA" if jogador_brancas else "Pretas", result)
+                            print(f"Salvo: {nome}")
+                            sound_manager.play('menu')
+                        else: # S = Som
+                            sound_manager.enabled = not sound_manager.enabled
 
-                # Clique no tabuleiro
+                # Cliques do Jogo
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    # Se tiver promoção pendente, checa clique no menu flutuante
-                    if promocao_pendente:
-                        # Lógica de botões de promoção
+                    # Lógica de Promoção
+                    if promocao_pendente and quadrado_promocao is not None:
+                        # ... (lógica de botões de promoção simplificada)
                         col = chess.square_file(quadrado_promocao)
                         row = 7 - chess.square_rank(quadrado_promocao)
                         if display_board.is_flipped: col, row = 7-col, 7-row
-                        menu_x, menu_y = col * 80 + 10, row * 80 - 10
+                        menu_x, menu_y = col * 80, row * 80
+                        if menu_y > 400: menu_y -= 200
                         
-                        pecas = [ (chess.QUEEN, 0), (chess.ROOK, 1), (chess.BISHOP, 2), (chess.KNIGHT, 3) ]
+                        pecas = [(chess.QUEEN, 0), (chess.ROOK, 1), (chess.BISHOP, 2), (chess.KNIGHT, 3)]
                         for ptype, idx in pecas:
-                            btn_rect = pygame.Rect(menu_x + 5, menu_y + 10 + idx*50, 50, 45)
-                            if btn_rect.collidepoint(event.pos):
+                            r = pygame.Rect(menu_x+10, menu_y + idx*50, 60, 50)
+                            if r.collidepoint(event.pos):
                                 move = chess.Move(move_promocao_pendente.from_square, move_promocao_pendente.to_square, promotion=ptype)
                                 realizar_jogada(engine, move, display_board, sound_manager)
                                 eval_bar.update(evaluate_board(engine.board))
-                                selecionado = None
-                                promocao_pendente = False
-                                aguardando_ia = True
-                        continue # Pula o resto da lógica de clique
+                                selecionado = None; promocao_pendente = False; aguardando_ia = True
+                        continue
 
-                    # Lógica normal de movimento
+                    # Lógica de Movimento
                     mouse_x, mouse_y = event.pos
-                    if mouse_x < 640: # Clique dentro do tabuleiro
+                    if mouse_x < 640:
                         c = mouse_x // 80
                         r = mouse_y // 80
-                        if display_board.is_flipped: c, r = 7-c, 7-r # Ajuste visual no clique
-                        
-                        # Garante que r/c estão entre 0-7
+                        if display_board.is_flipped: c, r = 7-c, 7-r
                         if 0 <= c <= 7 and 0 <= r <= 7:
-                            # IMPORTANTE: No Pygame Y cresce pra baixo (0 no topo), no Chess Rank 0 é em baixo.
-                            # A fórmula "row = 7 - (mouse_y // 80)" inverte isso corretamente para a Engine.
-                            # Mas se usarmos 'r' direto do mouse, precisamos converter.
-                            # Engine espera: rank 0 (embaixo), rank 7 (topo)
-                            # Mouse dá: 0 (topo), 7 (embaixo)
-                            # Então: rank = 7 - r
                             square = chess.square(c, 7 - r)
-
                             if selecionado is None:
                                 piece = engine.board.piece_at(square)
                                 if piece and piece.color == (chess.WHITE if jogador_brancas else chess.BLACK):
@@ -281,323 +387,239 @@ def main():
                                 move = chess.Move(selecionado, square)
                                 # Checa Promoção
                                 if engine.board.piece_at(selecionado).piece_type == chess.PAWN and chess.square_rank(square) in [0, 7]:
-                                    # Valida se é um movimento legal (mesmo sem saber a promoção ainda)
-                                    move_test = chess.Move(selecionado, square, promotion=chess.QUEEN)
-                                    if move_test in engine.board.legal_moves:
+                                    if chess.Move(selecionado, square, promotion=chess.QUEEN) in engine.board.legal_moves:
                                         promocao_pendente = True
                                         move_promocao_pendente = move
                                         cor_promocao_pendente = engine.board.piece_at(selecionado).color
                                         quadrado_promocao = square
                                         continue
-
-                                if move in engine.board.legal_moves and engine.board.piece_at(selecionado).color == (chess.WHITE if jogador_brancas else chess.BLACK):
+                                
+                                if move in engine.board.legal_moves:
                                     realizar_jogada(engine, move, display_board, sound_manager)
                                     eval_bar.update(evaluate_board(engine.board))
-                                    selecionado = None
-                                    aguardando_ia = True
+                                    selecionado = None; aguardando_ia = True
                                 else:
-                                    # Troca de seleção ou cancela
-                                    piece = engine.board.piece_at(square)
-                                    if piece and piece.color == (chess.WHITE if jogador_brancas else chess.BLACK):
-                                        selecionado = square
-                                        sound_manager.play('move')
+                                    p = engine.board.piece_at(square)
+                                    if p and p.color == (chess.WHITE if jogador_brancas else chess.BLACK):
+                                        selecionado = square; sound_manager.play('move')
                                     else:
                                         selecionado = None
 
-            # ---------------- ESTADO: INPUT NOME ----------------
+            # --- ESTADO: INPUT NOME ---
             elif estado_atual == ESTADO_INPUT_NOME:
                 res = input_nome.handle_event(event)
                 if res == 'submit':
                     score_manager.save_score(input_nome.text, pontuacao_final, "00:00")
                     estado_atual = ESTADO_RANKING
 
-        # --- LÓGICA DE JOGO (IA e Fim) ---
-        if estado_atual == ESTADO_JOGANDO:
-            if engine.is_game_over():
-                engine.stop()
-                vencedor = engine.get_winner()
-                eh_vitoria = (vencedor == ('white' if jogador_brancas else 'black'))
-                score_manager.update_stats('win' if eh_vitoria else ('loss' if vencedor != 'draw' else 'draw'))
-                
-                pontuacao_final = score_manager.calcular_pontuacao(eh_vitoria, calcular_material(engine.board, jogador_brancas), engine.get_game_duration())
-                
-                if eh_vitoria: sound_manager.play('game_over')
-                else: sound_manager.play('defeat')
-                
-                if score_manager.check_is_highscore(pontuacao_final):
-                    input_nome.text = ""; input_nome.active = True
-                    estado_atual = ESTADO_INPUT_NOME
-                else:
-                    estado_atual = ESTADO_RANKING
-            
-            elif aguardando_ia and not promocao_pendente:
+        # --- IA ---
+        if estado_atual == ESTADO_JOGANDO and aguardando_ia and not promocao_pendente:
+            if not engine.is_game_over():
                 move = get_best_move(engine.board, dificuldade)
                 if move:
                     realizar_jogada(engine, move, display_board, sound_manager)
                     eval_bar.update(evaluate_board(engine.board))
                 aguardando_ia = False
 
-        # --- DESENHO (RENDERIZAÇÃO) ---
+        # --- CHECAGEM DE FIM DE JOGO ---
+        if estado_atual == ESTADO_JOGANDO and engine.is_game_over():
+            engine.stop()
+            v = engine.get_winner()
+            eh_vitoria = (v == ('white' if jogador_brancas else 'black'))
+            score_manager.update_stats('win' if eh_vitoria else ('loss' if v != 'draw' else 'draw'))
+            pontuacao_final = score_manager.calcular_pontuacao(eh_vitoria, calcular_material(engine.board, jogador_brancas), engine.get_game_duration())
+            if eh_vitoria: sound_manager.play('game_over')
+            else: sound_manager.play('defeat')
+            
+            if score_manager.check_is_highscore(pontuacao_final):
+                input_nome.text = ""; input_nome.active = True
+                estado_atual = ESTADO_INPUT_NOME
+            else:
+                estado_atual = ESTADO_RANKING
+
+        # -------------------------------------------------
+        # --- RENDERIZAÇÃO (DESENHO) ---
+        # -------------------------------------------------
         screen.fill((40, 40, 40))
 
         if estado_atual == ESTADO_MENU:
-            titulo = fonte_titulo.render("PyChess Desktop", True, (255, 255, 255))
-            screen.blit(titulo, (840//2 - titulo.get_width()//2, 120))
-
+            lbl = fonte_titulo.render("PyChess Desktop", True, (255,255,255))
+            screen.blit(lbl, (840//2 - lbl.get_width()//2, 120))
+            
             # Botões
             btn_novo = pygame.Rect(260, 250, 320, 50)
             btn_pont = pygame.Rect(260, 320, 320, 50)
             btn_tema = pygame.Rect(260, 390, 320, 50)
             btn_replay = pygame.Rect(260, 460, 320, 50)
             btn_som = pygame.Rect(760, 20, 60, 40)
-
-            for btn, texto in [(btn_novo, "Novo Jogo"), (btn_pont, "Pontuações"), (btn_tema, "Temas"), (btn_replay, "Replay")]:
+            
+            for btn, txt in [(btn_novo, "Novo Jogo"), (btn_pont, "Pontuações"), (btn_tema, "Temas"), (btn_replay, "Replay")]:
                 pygame.draw.rect(screen, (70, 130, 180), btn, border_radius=12)
                 pygame.draw.rect(screen, (200, 200, 200), btn, 2, border_radius=12)
-                txt = fonte_btn.render(texto, True, (255,255,255))
-                screen.blit(txt, (btn.centerx - txt.get_width()//2, btn.centery - txt.get_height()//2))
-
-            # Botão Som
-            cor_som = (100, 200, 100) if sound_manager.enabled else (200, 100, 100)
-            pygame.draw.rect(screen, cor_som, btn_som, border_radius=5)
-            txt_som = pygame.font.SysFont("arial", 16, bold=True).render("SOM", True, (255,255,255))
-            screen.blit(txt_som, (btn_som.centerx - txt_som.get_width()//2, btn_som.centery - txt_som.get_height()//2))
-
+                lbl = fonte_btn.render(txt, True, (255,255,255))
+                screen.blit(lbl, (btn.centerx - lbl.get_width()//2, btn.centery - lbl.get_height()//2))
+            
+            # Som
+            cor = (100,200,100) if sound_manager.enabled else (200,100,100)
+            pygame.draw.rect(screen, cor, btn_som, border_radius=5)
+            screen.blit(fonte_small.render("SOM", True, (255,255,255)), (btn_som.x+10, btn_som.y+10))
+            
             # Stats
-            stats = score_manager.load_stats()
-            win_rate = score_manager.get_win_rate()
-            msg = f"V: {stats['wins']}  D: {stats['losses']}  E: {stats['draws']}  ({win_rate:.1f}%)"
-            screen.blit(fonte_small.render(msg, True, (150, 150, 150)), (280, 530))
+            s = score_manager.load_stats()
+            rate = score_manager.get_win_rate()
+            msg = f"V: {s['wins']}  D: {s['losses']}  E: {s['draws']} ({rate:.1f}%)"
+            screen.blit(fonte_small.render(msg, True, (150,150,150)), (280, 530))
 
-            # Clique nos botões
-            for event in eventos:
-                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    if btn_novo.collidepoint(event.pos):
-                        sound_manager.play('menu')
-                        estado_atual = ESTADO_ESCOLHA_COR
-                    elif btn_pont.collidepoint(event.pos):
-                        sound_manager.play('menu')
-                        estado_atual = ESTADO_RANKING
-                    elif btn_tema.collidepoint(event.pos):
-                        sound_manager.play('menu')
-                        estado_atual = ESTADO_TEMA
-                    elif btn_replay.collidepoint(event.pos):
-                        sound_manager.play('menu')
-                        estado_atual = ESTADO_PGN_SELECT
-                    elif btn_som.collidepoint(event.pos):
-                        sound_manager.enabled = not sound_manager.enabled
-                        if sound_manager.enabled: sound_manager.play('menu')
+        elif estado_atual == ESTADO_PGN_SELECT:
+            lbl = fonte_titulo.render("Selecione uma Partida", True, (255,255,255))
+            screen.blit(lbl, (280, 50))
+            
+            arquivos = pgn_manager.list_files()
+            y_start = 120
+            if not arquivos:
+                screen.blit(fonte_small.render("Nenhum arquivo em data/pgn/", True, (150,150,150)), (250, 200))
+            
+            mouse_pos = pygame.mouse.get_pos()
+            for i, arq in enumerate(arquivos):
+                if i > 10: break
+                rect = pygame.Rect(220, y_start + i*45, 400, 40)
+                cor = (80, 100, 120) if rect.collidepoint(mouse_pos) else (60, 80, 100)
+                pygame.draw.rect(screen, cor, rect, border_radius=5)
+                screen.blit(fonte_small.render(arq, True, (255,255,255)), (rect.x+10, rect.y+10))
+            
+            btn_abrir = pygame.Rect(220, 500, 200, 40)
+            pygame.draw.rect(screen, (60, 120, 60), btn_abrir, border_radius=8)
+            lbl = fonte_btn.render("Abrir Arquivo", True, (255,255,255))
+            screen.blit(lbl, (btn_abrir.centerx - lbl.get_width()//2, btn_abrir.y+5))
+
+            btn_voltar = pygame.Rect(440, 500, 200, 40)
+            pygame.draw.rect(screen, (150, 50, 50), btn_voltar, border_radius=8)
+            lbl = fonte_btn.render("Voltar", True, (255,255,255))
+            screen.blit(lbl, (btn_voltar.centerx - lbl.get_width()//2, btn_voltar.y+5))
+
+        elif estado_atual == ESTADO_SIMULACAO:
+            display_board.draw(engine.board)
+            eval_bar.draw(screen)
+            
+            # Painel Lateral de Simulação
+            pygame.draw.rect(screen, (50, 50, 60), (660, 0, 180, 640))
+            y_info = 20
+            screen.blit(fonte_small.render(f"Brancas: {sim_headers.get('White','?')}", True, (200,200,200)), (670, y_info))
+            screen.blit(fonte_small.render(f"Pretas: {sim_headers.get('Black','?')}", True, (200,200,200)), (670, y_info+25))
+            screen.blit(fonte_small.render(f"Res: {sim_headers.get('Result','*')}", True, (255,200,100)), (670, y_info+50))
+            
+            # Contador
+            lbl_move = pygame.font.SysFont("consolas", 30).render(f"{sim_index}/{len(sim_moves)}", True, (255,255,0))
+            screen.blit(lbl_move, (670 + 90 - lbl_move.get_width()//2, 150))
+            
+            # Botões Player
+            bts = [
+                ("<<", 670, 220), ("<", 710, 220),
+                ("||" if sim_auto else ">", 750, 220),
+                (">", 800, 220), (">>", 840, 220)
+            ]
+            for txt, bx, by in bts:
+                cor = (80, 180, 80) if txt=="||" else (80, 80, 120)
+                r = pygame.Rect(bx, by, 30 if txt!="||" and txt!=">" else 40, 30)
+                pygame.draw.rect(screen, cor, r, border_radius=5)
+                lbl = pygame.font.SysFont("arial", 18, bold=True).render(txt, True, (255,255,255))
+                screen.blit(lbl, (r.centerx-lbl.get_width()//2, r.centery-lbl.get_height()//2))
+            
+            # Speed
+            pygame.draw.rect(screen, (60,60,100), (670, 260, 160, 30), border_radius=5)
+            screen.blit(fonte_small.render(f"Velocidade: {sim_speed/1000:.1f}s", True, (255,255,255)), (680, 265))
+            
+            # Status
+            st = "REPRODUZINDO" if sim_auto else "PAUSADO"
+            c = (0,255,0) if sim_auto else (255,100,100)
+            screen.blit(fonte_btn.render(st, True, c), (670, 100))
 
         elif estado_atual == ESTADO_TEMA:
-            screen.fill((30, 30, 40))
             lbl = fonte_titulo.render("Escolha o Tema", True, (255,255,255))
             screen.blit(lbl, (840//2 - lbl.get_width()//2, 80))
+            temas = ['classico', 'torneio', 'dark', 'retro']
+            labels = ['Clássico', 'Torneio', 'Dark Mode', 'Retrô']
+            for i, t in enumerate(temas):
+                r = pygame.Rect(220, 180 + i*80, 400, 60)
+                c = (60, 100, 160) if tema_atual == t else (80, 80, 80)
+                pygame.draw.rect(screen, c, r, border_radius=10)
+                lbl = fonte_btn.render(labels[i], True, (255,255,255))
+                screen.blit(lbl, (r.centerx-lbl.get_width()//2, r.centery-lbl.get_height()//2))
             
-            temas_nomes = {'classico': 'Clássico', 'torneio': 'Torneio', 'dark': 'Dark Mode', 'retro': 'Retrô'}
-            for i, tema in enumerate(['classico', 'torneio', 'dark', 'retro']):
-                rect = pygame.Rect(220, 180 + i*80, 400, 60)
-                cor = (60, 100, 160) if tema_atual == tema else (80, 80, 80)
-                pygame.draw.rect(screen, cor, rect, border_radius=10)
-                txt = fonte_btn.render(temas_nomes[tema], True, (255,255,255))
-                screen.blit(txt, (rect.centerx - txt.get_width()//2, rect.centery - txt.get_height()//2))
-            
-            # Botão Voltar
             btn_voltar = pygame.Rect(320, 520, 200, 44)
             pygame.draw.rect(screen, (150, 50, 50), btn_voltar, border_radius=10)
-            txt_v = fonte_btn.render("Voltar", True, (255,255,255))
-            screen.blit(txt_v, (btn_voltar.centerx - txt_v.get_width()//2, btn_voltar.centery - txt_v.get_height()//2))
+            screen.blit(fonte_btn.render("Voltar", True, (255,255,255)), (380, 525))
 
         elif estado_atual == ESTADO_ESCOLHA_COR:
-            screen.fill((40, 40, 40))
-            # Desenhe aqui os botões de dificuldade, tempo e cor (copie do seu código anterior se precisar do visual específico)
-            # Versão simplificada para garantir funcionamento:
-            screen.blit(fonte_titulo.render("Configuração", True, (255,255,255)), (300, 50))
+            # Configuração
+            lbl = fonte_titulo.render("Configuração", True, (255,255,255))
+            screen.blit(lbl, (300, 50))
             
             # Dificuldade
-            lbl_dif = fonte_small.render(f"Dificuldade: {dificuldade}", True, (255,255,255))
-            screen.blit(lbl_dif, (350, 120))
+            screen.blit(fonte_small.render(f"Dificuldade: {dificuldade}", True, (255,255,255)), (350, 120))
+            start_x = 220
             for i in range(4):
-                r = pygame.Rect(220 + i*105, 150, 95, 40)
+                r = pygame.Rect(start_x + i*105, 150, 95, 40)
                 c = (0, 200, 0) if dificuldade == i+1 else (100,100,100)
                 pygame.draw.rect(screen, c, r, border_radius=5)
                 screen.blit(fonte_small.render(str(i+1), True, (255,255,255)), (r.x+40, r.y+10))
-
+            
             # Tempo
-            lbl_time = fonte_small.render(f"Tempo: {tempo_escolhido}", True, (255,255,255))
-            screen.blit(lbl_time, (350, 220))
-            tempos = [300, 600, None]
-            labels = ["5 min", "10 min", "Livre"]
-            for i, val in enumerate(tempos):
-                r = pygame.Rect(220 + i*140, 250, 130, 40)
+            screen.blit(fonte_small.render(f"Tempo: {tempo_escolhido}", True, (255,255,255)), (350, 220))
+            tls = ["5 min", "10 min", "Livre"]
+            for i, val in enumerate([300, 600, None]):
+                r = pygame.Rect(start_x + i*140, 250, 130, 40)
                 c = (0, 200, 0) if tempo_escolhido == val else (100,100,100)
                 pygame.draw.rect(screen, c, r, border_radius=5)
-                screen.blit(fonte_small.render(labels[i], True, (255,255,255)), (r.x+20, r.y+10))
-
-            # Cor
-            btn_brancas = pygame.Rect(180, 330, 220, 50)
-            btn_pretas = pygame.Rect(420, 330, 220, 50)
-            pygame.draw.rect(screen, (200, 200, 200), btn_brancas, border_radius=10)
+                screen.blit(fonte_small.render(tls[i], True, (255,255,255)), (r.x+20, r.y+10))
+            
+            # Jogar
+            b1 = pygame.Rect(180, 330, 220, 50)
+            b2 = pygame.Rect(420, 330, 220, 50)
+            pygame.draw.rect(screen, (200, 200, 200), b1, border_radius=10)
             screen.blit(fonte_btn.render("Brancas", True, (0,0,0)), (230, 340))
-            pygame.draw.rect(screen, (20, 20, 20), btn_pretas, border_radius=10)
-            pygame.draw.rect(screen, (200, 200, 200), btn_pretas, 2, border_radius=10)
+            pygame.draw.rect(screen, (20, 20, 20), b2, border_radius=10)
+            pygame.draw.rect(screen, (200, 200, 200), b2, 2, border_radius=10)
             screen.blit(fonte_btn.render("Pretas", True, (255,255,255)), (480, 340))
 
         elif estado_atual == ESTADO_JOGANDO:
-            # Atalho Ctrl+S para salvar PGN
-            for event in eventos:
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_s and (pygame.key.get_mods() & pygame.KMOD_CTRL):
-                        result = engine.board.result()
-                        nome_arquivo = pgn_manager.save_game(
-                            engine.board, 
-                            "Brancas" if jogador_brancas else "IA",
-                            "IA" if jogador_brancas else "Pretas",
-                            result
-                        )
-                        print(f"Salvo em: {nome_arquivo}")
-                        sound_manager.play('menu')
-                    # ---------------- ESTADO: SELEÇÃO DE PGN ----------------
-                    elif estado_atual == ESTADO_PGN_SELECT:
-                        screen.fill((40, 40, 40))
-                        fonte_titulo2 = pygame.font.SysFont("arial", 30, bold=True)
-                        screen.blit(fonte_titulo2.render("Selecione uma Partida", True, (255,255,255)), (280, 50))
-                        arquivos = pgn_manager.list_files()
-                        mouse_pos = pygame.mouse.get_pos()
-                        click = False
-                        for evt in eventos:
-                            if evt.type == pygame.MOUSEBUTTONDOWN and evt.button == 1: click = True
-                            if evt.type == pygame.KEYDOWN and evt.key == pygame.K_ESCAPE:
-                                estado_atual = ESTADO_MENU
-                        y_start = 120
-                        fonte_arq = pygame.font.SysFont("consolas", 18)
-                        if not arquivos:
-                            screen.blit(fonte_arq.render("Nenhuma partida salva em data/pgn/", True, (150,150,150)), (250, 200))
-                        for i, arq in enumerate(arquivos):
-                            if i > 10: break
-                            rect = pygame.Rect(220, y_start + i*45, 400, 40)
-                            cor = (60, 80, 100)
-                            if rect.collidepoint(mouse_pos):
-                                cor = (80, 100, 120)
-                                if click:
-                                    sim_moves, sim_headers = pgn_manager.load_game_moves(arq)
-                                    engine.board.reset()
-                                    sim_index = 0
-                                    sim_auto = False
-                                    sim_timer = 0
-                                    estado_atual = ESTADO_SIMULACAO
-                                    sound_manager.play('menu')
-                            pygame.draw.rect(screen, cor, rect, border_radius=5)
-                            screen.blit(fonte_arq.render(arq, True, (255,255,255)), (rect.x + 10, rect.y + 10))
-                        btn_voltar = pygame.Rect(320, 550, 200, 40)
-                        pygame.draw.rect(screen, (150, 50, 50), btn_voltar, border_radius=8)
-                        txt_v = fonte_btn.render("Voltar", True, (255,255,255))
-                        screen.blit(txt_v, (btn_voltar.centerx - txt_v.get_width()//2, btn_voltar.y+5))
-                        if click and btn_voltar.collidepoint(mouse_pos):
-                            estado_atual = ESTADO_MENU
-
-                    # ---------------- ESTADO: SIMULAÇÃO ----------------
-                    elif estado_atual == ESTADO_SIMULACAO:
-                        # 1. Lógica de Autoplay
-                        if sim_auto:
-                            sim_timer += dt
-                            if sim_timer >= sim_speed:
-                                sim_timer = 0
-                                if sim_index < len(sim_moves):
-                                    move = sim_moves[sim_index]
-                                    realizar_jogada(engine, move, display_board, sound_manager)
-                                    sim_index += 1
-                                else:
-                                    sim_auto = False
-                        # 2. Eventos e Controles Manuais
-                        for evt in eventos:
-                            if evt.type == pygame.QUIT: pygame.quit(); sys.exit()
-                            if evt.type == pygame.KEYDOWN:
-                                if evt.key == pygame.K_RIGHT:
-                                    if sim_index < len(sim_moves):
-                                        move = sim_moves[sim_index]
-                                        realizar_jogada(engine, move, display_board, sound_manager)
-                                        sim_index += 1
-                                        sim_auto = False
-                                elif evt.key == pygame.K_LEFT:
-                                    if sim_index > 0:
-                                        engine.board.pop()
-                                        sim_index -= 1
-                                        sim_auto = False
-                                        sound_manager.play('move')
-                                elif evt.key == pygame.K_SPACE:
-                                    sim_auto = not sim_auto
-                                elif evt.key == pygame.K_ESCAPE:
-                                    engine.start()
-                                    estado_atual = ESTADO_PGN_SELECT
-                        # 3. Renderização (Tabuleiro + Interface de Player)
-                        display_board.draw(engine.board)
-                        panel_rect = pygame.Rect(660, 0, 180, 640)
-                        pygame.draw.rect(screen, (40, 40, 50), panel_rect)
-                        fonte_info = pygame.font.SysFont("arial", 14)
-                        y_info = 20
-                        screen.blit(fonte_info.render(f"Brancas: {sim_headers.get('White','?')}", True, (200,200,200)), (670, y_info))
-                        screen.blit(fonte_info.render(f"Pretas: {sim_headers.get('Black','?')}", True, (200,200,200)), (670, y_info+20))
-                        screen.blit(fonte_info.render(f"Data: {sim_headers.get('Date','?')}", True, (150,150,150)), (670, y_info+45))
-                        txt_move = pygame.font.SysFont("consolas", 30).render(f"{sim_index}/{len(sim_moves)}", True, (255,255,0))
-                        screen.blit(txt_move, (670 + 90 - txt_move.get_width()//2, 150))
-                        dicas = [
-                            "SETAS: < > Navegar",
-                            "ESPAÇO: Play/Pause",
-                            "ESC: Voltar"
-                        ]
-                        for i, dica in enumerate(dicas):
-                            screen.blit(fonte_info.render(dica, True, (150,150,150)), (670, 500 + i*25))
-                        status_txt = "REPRODUZINDO >>" if sim_auto else "PAUSADO ||"
-                        cor_status = (0, 255, 0) if sim_auto else (255, 100, 100)
-                        screen.blit(fonte_btn.render(status_txt, True, cor_status), (670, 100))
             display_board.draw(engine.board)
             eval_bar.draw(screen)
             if selecionado is not None:
-                # Desenha destaque da seleção
                 c = chess.square_file(selecionado)
                 r = 7 - chess.square_rank(selecionado)
                 if display_board.is_flipped: c, r = 7-c, 7-r
-                s = pygame.Surface((80, 80))
-                s.set_alpha(100); s.fill((255, 255, 0))
+                s = pygame.Surface((80, 80)); s.set_alpha(100); s.fill((255, 255, 0))
                 screen.blit(s, (c*80, r*80))
                 display_board.draw_valid_moves(engine.board, selecionado)
             
-            # Painel Lateral (código simplificado para caber)
+            # Painel Lateral Jogo
             pygame.draw.rect(screen, (60, 60, 60), (660, 0, 180, 640))
+            def fmt(t): return "--:--" if engine.time_limit is None else f"{int(t)//60:02}:{int(t)%60:02}"
+            
             # Relógios
-            def fmt_time(t): return "--:--" if engine.time_limit is None else f"{int(t)//60:02}:{int(t)%60:02}"
-            
-            # Preto (Topo)
             pygame.draw.rect(screen, (30, 30, 30), (670, 20, 160, 50), border_radius=5)
-            screen.blit(fonte_btn.render(fmt_time(engine.black_time), True, (255,50,50) if engine.black_time<30 else (255,255,255)), (700, 30))
-            
-            # Branco (Baixo)
+            screen.blit(fonte_btn.render(fmt(engine.black_time), True, (255,50,50) if engine.black_time<30 else (255,255,255)), (700, 30))
             pygame.draw.rect(screen, (200, 200, 200), (670, 400, 160, 50), border_radius=5)
-            screen.blit(fonte_btn.render(fmt_time(engine.white_time), True, (0,0,0)), (700, 410))
-
-            # Dica
+            screen.blit(fonte_btn.render(fmt(engine.white_time), True, (0,0,0)), (700, 410))
+            
+            # Dica e Menu Promoção
             if ultima_dica_ia:
-                screen.blit(fonte_small.render("Dica:", True, (100, 255, 100)), (670, 200))
-                screen.blit(fonte_small.render(ultima_dica_ia.replace("Dica: ", ""), True, (200, 200, 200)), (670, 230))
-
-            # Promoção Pendente (Menu Flutuante)
+                screen.blit(fonte_small.render("Dica IA:", True, (100,255,100)), (670, 200))
+                screen.blit(fonte_small.render(ultima_dica_ia.replace("Dica: ",""), True, (200,200,200)), (670, 230))
+            
             if promocao_pendente and quadrado_promocao is not None:
                 c = chess.square_file(quadrado_promocao)
                 r = 7 - chess.square_rank(quadrado_promocao)
                 if display_board.is_flipped: c, r = 7-c, 7-r
-                
-                # Fundo do menu
-                menu_x, menu_y = c*80, r*80
-                if menu_y > 400: menu_y -= 200 # Se for em baixo, joga menu pra cima
-                pygame.draw.rect(screen, (50, 50, 50), (menu_x, menu_y, 80, 200))
-                pygame.draw.rect(screen, (255, 255, 255), (menu_x, menu_y, 80, 200), 2)
-                
-                # Desenha ícones
+                mx, my = c*80, r*80
+                if my > 400: my -= 200
+                pygame.draw.rect(screen, (50, 50, 50), (mx, my, 80, 200))
+                pygame.draw.rect(screen, (255,255,255), (mx, my, 80, 200), 2)
                 pecas = [chess.QUEEN, chess.ROOK, chess.BISHOP, chess.KNIGHT]
                 for i, p in enumerate(pecas):
                     img = display_board.images.get((p, cor_promocao_pendente))
-                    if img:
-                        screen.blit(pygame.transform.scale(img, (60, 60)), (menu_x+10, menu_y + i*50))
+                    if img: screen.blit(pygame.transform.scale(img, (60,60)), (mx+10, my + i*50))
 
         elif estado_atual == ESTADO_RANKING:
             scores = score_manager.load_scores()
