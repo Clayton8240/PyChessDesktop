@@ -1,3 +1,46 @@
+
+# --- Barra de Avaliação Visual ---
+class EvaluationBar:
+	def __init__(self, rect):
+		self.rect = rect
+		self.target_score = 0
+		self.visual_score = 0
+		self.max_score = 2000
+		self.is_flipped = False  # NOVO: Estado de rotação
+
+	def set_flip(self, flip):
+		"""Define se a barra deve ser invertida visualmente."""
+		self.is_flipped = flip
+
+	def update(self, current_eval):
+		# Limita visualmente para não quebrar o gráfico em mates forçados
+		if current_eval > 20000: current_eval = self.max_score
+		if current_eval < -20000: current_eval = -self.max_score
+		self.target_score = current_eval
+		# Animação suave (LERP)
+		self.visual_score += (self.target_score - self.visual_score) * 0.1
+
+	def draw(self, screen):
+		import pygame
+		# 1. Desenha fundo (Preto)
+		pygame.draw.rect(screen, (40, 40, 40), self.rect)
+		# 2. Calcula porcentagem das BRANCAS
+		# Score 0 = 0.5 (50%)
+		percent = 0.5 + (self.visual_score / (2 * self.max_score))
+		percent = max(0.0, min(1.0, percent))
+		white_height = int(self.rect.height * percent)
+		# 3. Desenha a parte Branca (AQUI ESTÁ A MÁGICA DO FLIP)
+		if self.is_flipped:
+			# Se virado (Pretas embaixo): Brancas ficam no TOPO
+			white_rect = pygame.Rect(self.rect.x, self.rect.y, self.rect.width, white_height)
+		else:
+			# Normal (Brancas embaixo): Brancas ficam no FUNDO
+			white_rect = pygame.Rect(self.rect.x, self.rect.y + self.rect.height - white_height, self.rect.width, white_height)
+		pygame.draw.rect(screen, (240, 240, 240), white_rect)
+		# 4. Linha do meio (Empate) e Borda
+		mid_y = self.rect.y + (self.rect.height // 2)
+		pygame.draw.line(screen, (100, 100, 100), (self.rect.x, mid_y), (self.rect.x + self.rect.width, mid_y), 2)
+		pygame.draw.rect(screen, (100, 100, 100), self.rect, 2) # Borda da barra
 import math # Importante para a animação suave
 class PieceAnimation:
 	def __init__(self, start_pos, end_pos, image, duration=250):
@@ -30,11 +73,30 @@ class PieceAnimation:
 import pygame
 
 # Paleta de cores madeira clássica
-WOOD_LIGHT = (222, 184, 135)  # Burlywood
-WOOD_DARK = (139, 69, 19)     # SaddleBrown
+
+# --- Temas de Tabuleiro ---
+THEMES = {
+	'classico': {
+		'light': (222, 184, 135),  # Burlywood
+		'dark': (139, 69, 19),     # SaddleBrown
+	},
+	'torneio': {
+		'light': (240, 217, 181),  # Creme (Chess.com)
+		'dark': (120, 154, 100),   # Verde (Chess.com)
+	},
+	'dark': {
+		'light': (60, 60, 80),     # Cinza escuro
+		'dark': (0, 180, 255),     # Azul Neon
+	},
+	'retro': {
+		'light': (255, 255, 255),  # Branco puro
+		'dark': (0, 0, 0),         # Preto puro
+	},
+}
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GRAY = (60, 60, 60)
+
 
 class TextInput:
 	"""
@@ -130,7 +192,7 @@ class DisplayBoard:
 					draw_col = dest_col
 					draw_row = dest_row
 				self.screen.blit(surface, (draw_col * self.sq_size, draw_row * self.sq_size))
-	def __init__(self, screen, tamanho_quadrado=80):
+	def __init__(self, screen, tamanho_quadrado=80, tema='classico'):
 		self.screen = screen
 		self.sq_size = tamanho_quadrado
 		self.images = {}
@@ -138,6 +200,12 @@ class DisplayBoard:
 		self.active_animation = None
 		self.animating_dest_square = None
 		self.is_flipped = False
+		self.tema = tema
+		self.tema_cores = THEMES.get(tema, THEMES['classico'])
+
+	def set_tema(self, tema):
+		self.tema = tema
+		self.tema_cores = THEMES.get(tema, THEMES['classico'])
 
 	def set_flip(self, flip):
 		self.is_flipped = flip
@@ -200,12 +268,20 @@ class DisplayBoard:
 		# 1. Desenha o Grid
 		for r in range(8):
 			for c in range(8):
-				# Lógica para flipar o tabuleiro
 				draw_c = 7 - c if self.is_flipped else c
 				draw_r = 7 - r if self.is_flipped else r
-				color = WOOD_LIGHT if (r + c) % 2 == 0 else WOOD_DARK
-				rect = pygame.Rect(draw_c * self.sq_size, draw_r * self.sq_size, self.sq_size, self.sq_size)
-				pygame.draw.rect(self.screen, color, rect)
+				# Escolhe cor do tema
+				if self.tema == 'retro':
+					# Pixelado: desenha quadrados "pixel" (8x8)
+					color = self.tema_cores['light'] if (r + c) % 2 == 0 else self.tema_cores['dark']
+					rect = pygame.Rect(draw_c * self.sq_size, draw_r * self.sq_size, self.sq_size, self.sq_size)
+					for y in range(0, self.sq_size, 10):
+						for x in range(0, self.sq_size, 10):
+							pygame.draw.rect(self.screen, color, (rect.x + x, rect.y + y, 10, 10))
+				else:
+					color = self.tema_cores['light'] if (r + c) % 2 == 0 else self.tema_cores['dark']
+					rect = pygame.Rect(draw_c * self.sq_size, draw_r * self.sq_size, self.sq_size, self.sq_size)
+					pygame.draw.rect(self.screen, color, rect)
 
 		# 2. Desenha as Peças
 		for square in chess.SQUARES:
@@ -226,3 +302,6 @@ class DisplayBoard:
 		# 3. Desenha a Peça Animada por cima de tudo
 		if self.active_animation:
 			self.active_animation.draw(self.screen)
+# --- Cores padrão para LeaderboardView (Ranking) ---
+WOOD_LIGHT = (240, 217, 181)
+WOOD_DARK = (181, 136, 99)
