@@ -10,6 +10,7 @@ from src.scoring import ScoreManager
 from src.ai import get_best_move, evaluate_board
 from src.sound import SoundManager
 from src.pgn_manager import PGNManager
+from src.puzzle_manager import PuzzleManager # <--- Adicione isto
 
 # Função auxiliar para calcular material
 def calcular_material(board, is_white_player):
@@ -57,6 +58,7 @@ ESTADO_RANKING = 4
 ESTADO_TEMA = 5
 ESTADO_PGN_SELECT = 6
 ESTADO_SIMULACAO = 7
+ESTADO_PUZZLE = 8 # <--- Novo Estado
 
 def main():
     pygame.init()
@@ -106,6 +108,11 @@ def main():
 
     # Replay/Simulação
     pgn_manager = PGNManager()
+    puzzle_manager = PuzzleManager()
+    puzzle_ativo = False
+    puzzle_info = "" # Texto para mostrar na tela (ex: "Mate em 1")
+    feedback_puzzle = "" # "Correto!" ou "Tente Novamente"
+    feedback_timer = 0
     sim_moves = []
     sim_index = 0
     sim_auto = False
@@ -168,6 +175,19 @@ def main():
                     elif btn_som.collidepoint(event.pos):
                         sound_manager.enabled = not sound_manager.enabled
                         if sound_manager.enabled: sound_manager.play('menu')
+
+                    btn_puzzle = pygame.Rect(260, 530, 320, 50) # Embaixo dos outros, ajuste o Y se precisar
+                    if btn_puzzle.collidepoint(event.pos):
+                        # INICIAR PUZZLE
+                        p = puzzle_manager.get_random_puzzle()
+                        if p:
+                            engine.board.set_fen(p['fen'])
+                            # Vira o tabuleiro se for a vez das Pretas jogarem
+                            display_board.set_flip(not engine.board.turn)
+                            puzzle_info = f"{p['description']} (Rating: {p['rating']})"
+                            feedback_puzzle = "Encontre o melhor lance!"
+                            estado_atual = ESTADO_PUZZLE
+                            sound_manager.play('menu')
 
             # --- ESTADO: PGN SELECT ---
             elif estado_atual == ESTADO_PGN_SELECT:
@@ -425,6 +445,61 @@ def main():
                     score_manager.save_score(input_nome.text, pontuacao_final, "00:00")
                     estado_atual = ESTADO_RANKING
 
+            # --- ESTADO: PUZZLE ---
+            elif estado_atual == ESTADO_PUZZLE:
+                # Atalho ESC para sair
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    estado_atual = ESTADO_MENU
+                    engine.start() # Reseta engine para o menu
+
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    # ... (Copie a lógica de clique do ESTADO_JOGANDO aqui, mas com validação diferente) ...
+                    mouse_x, mouse_y = event.pos
+                    if mouse_x < 640:
+                        c = mouse_x // 80
+                        r = mouse_y // 80
+                        if display_board.is_flipped: c, r = 7-c, 7-r
+                        if 0 <= c <= 7 and 0 <= r <= 7:
+                            square = chess.square(c, 7 - r)
+                            
+                            if selecionado is None:
+                                p = engine.board.piece_at(square)
+                                if p and p.color == engine.board.turn: # Só pode selecionar a cor da vez
+                                    selecionado = square
+                                    sound_manager.play('move')
+                            else:
+                                move = chess.Move(selecionado, square)
+                                # Promoção automática para Rainha em puzzles para simplificar
+                                if engine.board.piece_at(selecionado).piece_type == chess.PAWN and chess.square_rank(square) in [0, 7]:
+                                    move.promotion = chess.QUEEN
+
+                                if move in engine.board.legal_moves:
+                                    # --- VALIDAÇÃO DO PUZZLE ---
+                                    correto, acabou = puzzle_manager.check_move(move)
+                                    
+                                    if correto:
+                                        # Lance Certo!
+                                        realizar_jogada(engine, move, display_board, sound_manager)
+                                        selecionado = None
+                                        
+                                        if acabou:
+                                            feedback_puzzle = "PUZZLE RESOLVIDO!"
+                                            sound_manager.play('game_over')
+                                            # Aqui você pode carregar outro puzzle automaticamente após 2s
+                                        else:
+                                            feedback_puzzle = "Correto! Continue..."
+                                            # Oponente responde instantaneamente
+                                            resp = puzzle_manager.get_next_opponent_move()
+                                            if resp:
+                                                realizar_jogada(engine, resp, display_board, sound_manager)
+                                    else:
+                                        # Lance Errado!
+                                        feedback_puzzle = "Errado. Tente de novo."
+                                        sound_manager.play('defeat')
+                                        selecionado = None
+                                else:
+                                    selecionado = None
+
         # --- IA ---
         if estado_atual == ESTADO_JOGANDO and aguardando_ia and not promocao_pendente:
             if not engine.is_game_over():
@@ -471,6 +546,12 @@ def main():
                 pygame.draw.rect(screen, (200, 200, 200), btn, 2, border_radius=12)
                 lbl = fonte_btn.render(txt, True, (255,255,255))
                 screen.blit(lbl, (btn.centerx - lbl.get_width()//2, btn.centery - lbl.get_height()//2))
+
+            btn_puzzle = pygame.Rect(260, 530, 320, 50) # Embaixo dos outros, ajuste o Y se precisar
+            pygame.draw.rect(screen, (150, 100, 200), btn_puzzle, border_radius=12) # Roxo
+            pygame.draw.rect(screen, (200, 200, 200), btn_puzzle, 2, border_radius=12)
+            lbl_puzz = fonte_btn.render("Treino Tático", True, (255,255,255))
+            screen.blit(lbl_puzz, (btn_puzzle.centerx - lbl_puzz.get_width()//2, btn_puzzle.centery - lbl_puzz.get_height()//2))
             
             # Som
             cor = (100,200,100) if sound_manager.enabled else (200,100,100)
@@ -668,6 +749,65 @@ def main():
                 for i, p in enumerate(pecas):
                     img = display_board.images.get((p, cor_promocao_pendente))
                     if img: screen.blit(pygame.transform.scale(img, (60,60)), (mx+10, my + i*50))
+
+        elif estado_atual == ESTADO_PUZZLE:
+            display_board.draw(engine.board)
+            
+            # Destaque da seleção (igual ao jogo)
+            if selecionado is not None:
+                c = chess.square_file(selecionado)
+                r = 7 - chess.square_rank(selecionado)
+                if display_board.is_flipped: c, r = 7-c, 7-r
+                s = pygame.Surface((80, 80)); s.set_alpha(100); s.fill((255, 255, 0))
+                screen.blit(s, (c*80, r*80))
+            
+            # Painel Lateral do Puzzle
+            pygame.draw.rect(screen, (60, 50, 70), (660, 0, 180, 640)) # Um roxo escuro para diferenciar
+            
+            # Título
+            lbl = fonte_btn.render("Puzzle", True, (255, 255, 255))
+            screen.blit(lbl, (670 + 90 - lbl.get_width()//2, 30))
+            
+            # Info
+            # Quebra de linha simples para descrição
+            palavras = puzzle_info.split()
+            y_txt = 80
+            linha = ""
+            for p in palavras:
+                if len(linha + p) > 20: # Limite manual simples
+                    screen.blit(fonte_small.render(linha, True, (200, 200, 200)), (670, y_txt))
+                    y_txt += 25
+                    linha = p + " "
+                else:
+                    linha += p + " "
+            screen.blit(fonte_small.render(linha, True, (200, 200, 200)), (670, y_txt))
+
+            # Feedback (Grande e colorido)
+            cor_feed = (100, 255, 100) if "Correto" in feedback_puzzle or "RESOLVIDO" in feedback_puzzle else (255, 100, 100)
+            if "Encontre" in feedback_puzzle: cor_feed = (255, 255, 255)
+            
+            lbl_feed = fonte_small.render(feedback_puzzle, True, cor_feed)
+            screen.blit(lbl_feed, (670, 300))
+
+            # Botão Próximo Puzzle (Só aparece se resolver)
+            if "RESOLVIDO" in feedback_puzzle:
+                btn_prox = pygame.Rect(670, 400, 160, 50)
+                pygame.draw.rect(screen, (100, 200, 100), btn_prox, border_radius=8)
+                l = fonte_btn.render("Próximo", True, (255,255,255))
+                screen.blit(l, (btn_prox.centerx - l.get_width()//2, btn_prox.centery - l.get_height()//2))
+                
+                # Detecta clique aqui mesmo (hack rápido para não criar evento lá em cima só pra isso)
+                if pygame.mouse.get_pressed()[0]:
+                    mx, my = pygame.mouse.get_pos()
+                    if btn_prox.collidepoint(mx, my):
+                        # Carrega novo puzzle
+                        p = puzzle_manager.get_random_puzzle()
+                        if p:
+                            engine.board.set_fen(p['fen'])
+                            display_board.set_flip(not engine.board.turn)
+                            puzzle_info = f"{p['description']} ({p['rating']})"
+                            feedback_puzzle = "Encontre o melhor lance!"
+                            pygame.time.wait(200) # Evita clique duplo
 
         elif estado_atual == ESTADO_RANKING:
             scores = score_manager.load_scores()
