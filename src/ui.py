@@ -1,4 +1,4 @@
-
+import math
 # --- Barra de Avaliação Visual ---
 class EvaluationBar:
 	def __init__(self, rect):
@@ -168,52 +168,36 @@ import os
 import chess
 
 class DisplayBoard:
-		def draw_arrow(self, from_sq, to_sq, color=(0, 180, 255, 160), width=8, head_length=28, head_angle=28):
-			"""
-			Desenha uma seta translúcida do quadrado from_sq para to_sq.
-			color: RGBA (padrão: azul neon translúcido)
-			width: largura do corpo da seta
-			head_length: comprimento da cabeça da seta
-			head_angle: abertura da cabeça da seta (graus)
-			"""
-			import pygame
-			import math
-			# 1. Converte casas para coordenadas de pixel (centro do quadrado)
-			col_from = chess.square_file(from_sq)
-			row_from = 7 - chess.square_rank(from_sq)
-			col_to = chess.square_file(to_sq)
-			row_to = 7 - chess.square_rank(to_sq)
+		def draw_arrow(self, move, color=(0, 255, 0)):
+			"""Desenha uma seta do movimento sobre o tabuleiro."""
+			start_sq = move.from_square
+			end_sq = move.to_square
+			
+			# Coordenadas Lógicas
+			c1 = chess.square_file(start_sq)
+			r1 = 7 - chess.square_rank(start_sq)
+			c2 = chess.square_file(end_sq)
+			r2 = 7 - chess.square_rank(end_sq)
+			
+			# Ajuste Flip
 			if self.is_flipped:
-				draw_col_from = 7 - col_from
-				draw_row_from = 7 - row_from
-				draw_col_to = 7 - col_to
-				draw_row_to = 7 - row_to
-			else:
-				draw_col_from = col_from
-				draw_row_from = row_from
-				draw_col_to = col_to
-				draw_row_to = row_to
-			x1 = draw_col_from * self.sq_size + self.sq_size // 2
-			y1 = draw_row_from * self.sq_size + self.sq_size // 2
-			x2 = draw_col_to * self.sq_size + self.sq_size // 2
-			y2 = draw_row_to * self.sq_size + self.sq_size // 2
-			# 2. Desenha corpo da seta
-			arrow_surface = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
-			pygame.draw.line(arrow_surface, color, (x1, y1), (x2, y2), width)
-			# 3. Calcula cabeça da seta
-			dx = x2 - x1
-			dy = y2 - y1
-			angle = math.atan2(dy, dx)
-			# Pontos da cabeça
-			angle1 = angle + math.radians(head_angle)
-			angle2 = angle - math.radians(head_angle)
-			x3 = x2 - head_length * math.cos(angle1)
-			y3 = y2 - head_length * math.sin(angle1)
-			x4 = x2 - head_length * math.cos(angle2)
-			y4 = y2 - head_length * math.sin(angle2)
-			pygame.draw.polygon(arrow_surface, color, [(x2, y2), (x3, y3), (x4, y4)])
-			# 4. Blit na tela
-			self.screen.blit(arrow_surface, (0, 0))
+				c1, r1 = 7-c1, 7-r1
+				c2, r2 = 7-c2, 7-r2
+				
+			# Coordenadas em Pixels (Centro da casa)
+			offset = self.sq_size // 2
+			start = (c1 * self.sq_size + offset, r1 * self.sq_size + offset)
+			end = (c2 * self.sq_size + offset, r2 * self.sq_size + offset)
+			
+			# Desenha a Linha
+			pygame.draw.line(self.screen, color, start, end, 6)
+			
+			# Desenha a Ponta (Trigonometria)
+			rotation = math.atan2(start[1] - end[1], end[0] - start[0]) + math.pi/2
+			rad = 20 # Tamanho da ponta
+			p1 = (end[0] + rad * math.sin(rotation - math.pi/6), end[1] + rad * math.cos(rotation - math.pi/6))
+			p2 = (end[0] + rad * math.sin(rotation + math.pi/6), end[1] + rad * math.cos(rotation + math.pi/6))
+			pygame.draw.polygon(self.screen, color, [end, p1, p2])
 		def draw_valid_moves(self, board, selected_square):
 			if selected_square is None:
 				return

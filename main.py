@@ -112,6 +112,7 @@ def main():
     puzzle_ativo = False
     puzzle_info = "" # Texto para mostrar na tela (ex: "Mate em 1")
     feedback_puzzle = "" # "Correto!" ou "Tente Novamente"
+    puzzle_hint_move = None # <--- NOVO: Guarda o movimento da dica
     feedback_timer = 0
     sim_moves = []
     sim_index = 0
@@ -447,12 +448,21 @@ def main():
 
             # --- ESTADO: PUZZLE ---
             elif estado_atual == ESTADO_PUZZLE:
-                # Atalho ESC para sair
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    estado_atual = ESTADO_MENU
-                    engine.start() # Reseta engine para o menu
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        estado_atual = ESTADO_MENU
+                        engine.start()
+                        puzzle_hint_move = None # Limpa dica ao sair
+                    
+                    # --- DICA (H) ---
+                    elif event.key == pygame.K_h:
+                        puzzle_hint_move = puzzle_manager.get_solution_move()
+                        sound_manager.play('hint')
 
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    # Se o jogador clicar para tentar mover, limpe a dica para não poluir
+                    puzzle_hint_move = None 
+                    
                     # ... (Copie a lógica de clique do ESTADO_JOGANDO aqui, mas com validação diferente) ...
                     mouse_x, mouse_y = event.pos
                     if mouse_x < 640:
@@ -752,6 +762,11 @@ def main():
 
         elif estado_atual == ESTADO_PUZZLE:
             display_board.draw(engine.board)
+            
+            # --- DESENHA A DICA ---
+            if puzzle_hint_move:
+                display_board.draw_arrow(puzzle_hint_move, color=(0, 255, 0))
+            # ----------------------
             
             # Destaque da seleção (igual ao jogo)
             if selecionado is not None:

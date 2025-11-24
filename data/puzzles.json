@@ -3,21 +3,788 @@
     "id": "001",
     "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4",
     "moves": ["h5f7"],
-    "description": "Mate do Pastor (Mate em 1)",
+    "description": "Mate do Pastor",
     "rating": 800
   },
   {
     "id": "002",
     "fen": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq - 0 2",
     "moves": ["d8h4"],
-    "description": "Mate do Louco (Mate em 1)",
+    "description": "Mate do Louco",
     "rating": 800
   },
+
   {
     "id": "003",
-    "fen": "r1b1k1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1qPP/RNBQ1K1R w kq - 0 6",
-    "moves": ["d2d4", "c5d4"],
-    "description": "Defesa contra Ataque (Encontre o melhor lance)",
+    "fen": "6k1/5ppp/8/8/8/8/5PPP/6K1 w - - 0 1",
+    "moves": ["g2g4"],
+    "description": "Mate em 1 — mate pelo peão",
+    "rating": 400
+  },
+  {
+    "id": "004",
+    "fen": "7k/6pp/8/8/8/8/5PPP/6K1 w - - 0 1",
+    "moves": ["g2g3"],
+    "description": "Mate em 1 — linha fechada",
+    "rating": 400
+  },
+  {
+    "id": "005",
+    "fen": "7k/7p/8/8/8/8/6PP/7K w - - 0 1",
+    "moves": ["h2h4"],
+    "description": "Mate em 1 — coluna h",
+    "rating": 400
+  },
+
+  {
+    "id": "006",
+    "fen": "6k1/5p2/6Q1/8/8/8/8/6K1 w - - 0 1",
+    "moves": ["g6g7"],
+    "description": "Mate em 1 — rainha finaliza",
+    "rating": 600
+  },
+  {
+    "id": "007",
+    "fen": "6k1/5p2/7Q/8/8/8/8/6K1 w - - 0 1",
+    "moves": ["h6g7"],
+    "description": "Mate em 1 — rainha diagonal",
+    "rating": 600
+  },
+  {
+    "id": "008",
+    "fen": "7k/6Q1/8/8/8/8/8/6K1 w - - 0 1",
+    "moves": ["g7g8"],
+    "description": "Mate em 1 — rainha promoção",
+    "rating": 600
+  },
+
+  {
+    "id": "009",
+    "fen": "6k1/5pp1/7p/8/8/8/5PPP/6K1 w - - 0 1",
+    "moves": ["g2g3", "g8h7", "g3g4"],
+    "description": "Mate em 2 simples",
+    "rating": 700
+  },
+  {
+    "id": "010",
+    "fen": "6k1/6pp/7p/8/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["g2g4", "g8f7", "g4g5"],
+    "description": "Mate em 2 — pressão no rei",
+    "rating": 700
+  },
+
+  {
+    "id": "011",
+    "fen": "7k/6pp/7q/8/8/8/7P/6K1 w - - 0 1",
+    "moves": ["h2h4", "h6h4", "g1g2", "h4h1"],
+    "description": "Mate em 3 — linha aberta",
+    "rating": 900
+  },
+  {
+    "id": "012",
+    "fen": "7k/7p/6pq/8/8/8/7P/6K1 w - - 0 1",
+    "moves": ["h2h4", "h6h4", "g1g2", "h4h1"],
+    "description": "Mate em 3 similar",
+    "rating": 900
+  },
+
+  {
+    "id": "013",
+    "fen": "6k1/5ppp/8/8/8/8/5PPP/5RK1 w - - 0 1",
+    "moves": ["f1e1", "g8f8", "e1e8"],
+    "description": "Mate em 2 — torre decisiva",
     "rating": 1000
+  },
+  {
+    "id": "014",
+    "fen": "6k1/5ppp/8/8/8/8/5PPP/4R1K1 w - - 0 1",
+    "moves": ["e1e8", "g8h7", "e8h8"],
+    "description": "Mate em 2 — torre lateral",
+    "rating": 1000
+  },
+
+  {
+    "id": "015",
+    "fen": "7k/6pp/5r2/8/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["g2g4", "h8g8", "g4g5", "f6f1"],
+    "description": "Mate em 4",
+    "rating": 1100
+  },
+
+  {
+    "id": "016",
+    "fen": "7k/5ppp/8/8/5Q2/8/5PPP/6K1 w - - 0 1",
+    "moves": ["f4b8"],
+    "description": "Mate em 1 — rainha b8",
+    "rating": 700
+  },
+  {
+    "id": "017",
+    "fen": "6k1/5ppp/8/8/5Q2/8/5PPP/6K1 w - - 0 1",
+    "moves": ["f4b8"],
+    "description": "Mate em 1 — padrão repetido",
+    "rating": 700
+  },
+
+  {
+    "id": "018",
+    "fen": "7k/6pp/8/7Q/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["h5e8"],
+    "description": "Mate em 1 — diagonal longa",
+    "rating": 750
+  },
+  {
+    "id": "019",
+    "fen": "7k/6pp/8/8/5Q2/8/6PP/6K1 w - - 0 1",
+    "moves": ["f4f8"],
+    "description": "Mate em 1 — fileira 8",
+    "rating": 700
+  },
+  {
+    "id": "020",
+    "fen": "7k/6pp/8/8/8/5Q2/6PP/6K1 w - - 0 1",
+    "moves": ["f3f8"],
+    "description": "Mate em 1 — rainha controla saída",
+    "rating": 700
+  },
+
+  {
+    "id": "021",
+    "fen": "7k/6pp/8/8/8/8/5QPP/6K1 w - - 0 1",
+    "moves": ["f2f8"],
+    "description": "Mate em 1 — lance direto",
+    "rating": 700
+  },
+
+  {
+    "id": "022",
+    "fen": "7k/5Qpp/8/8/8/8/7P/6K1 w - - 0 1",
+    "moves": ["f7f8"],
+    "description": "Mate em 1 — promoção forçada",
+    "rating": 750
+  },
+
+  {
+    "id": "023",
+    "fen": "7k/7p/5Qp1/8/8/8/7P/6K1 w - - 0 1",
+    "moves": ["f6f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "024",
+    "fen": "6k1/6pp/5Q2/8/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["f6f8"],
+    "description": "Mate em 1 similar",
+    "rating": 700
+  },
+
+  {
+    "id": "025",
+    "fen": "6k1/7p/5Qp1/8/8/8/7P/6K1 w - - 0 1",
+    "moves": ["f6f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "026",
+    "fen": "6k1/7p/6p1/5Q2/8/8/7P/6K1 w - - 0 1",
+    "moves": ["f5f8"],
+    "description": "Mate em 1 — rainha avança",
+    "rating": 700
+  },
+
+  {
+    "id": "027",
+    "fen": "6k1/6pp/8/7Q/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["h5e8"],
+    "description": "Mate em 1 — diagonal",
+    "rating": 700
+  },
+
+  {
+    "id": "028",
+    "fen": "6k1/5ppp/8/8/7Q/8/6PP/6K1 w - - 0 1",
+    "moves": ["h4d8"],
+    "description": "Mate em 1 — rainha domina",
+    "rating": 750
+  },
+
+  {
+    "id": "029",
+    "fen": "6k1/5p1p/6p1/7Q/8/8/7P/6K1 w - - 0 1",
+    "moves": ["h5h8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "030",
+    "fen": "7k/5ppp/6q1/8/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["g2g4", "h8g8", "g4g5"],
+    "description": "Mate em 2 — avanço de peão",
+    "rating": 850
+  },
+
+  {
+    "id": "031",
+    "fen": "6k1/5ppp/8/8/2Q5/8/5PPP/6K1 w - - 0 1",
+    "moves": ["c4c8"],
+    "description": "Mate em 1 — torre invisível",
+    "rating": 700
+  },
+
+  {
+    "id": "032",
+    "fen": "6k1/5p1p/6p1/2Q5/8/8/7P/6K1 w - - 0 1",
+    "moves": ["c5c8"],
+    "description": "Mate em 1 — rainha coluna c",
+    "rating": 700
+  },
+
+  {
+    "id": "033",
+    "fen": "7k/6pp/5Q2/8/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["f6f8"],
+    "description": "Mate em 1 repetido",
+    "rating": 700
+  },
+
+  {
+    "id": "034",
+    "fen": "6k1/6pp/5Q2/8/8/8/7P/6K1 w - - 0 1",
+    "moves": ["f6f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "035",
+    "fen": "7k/6pp/8/8/5Q2/8/6PP/6K1 w - - 0 1",
+    "moves": ["f4f8"],
+    "description": "Mate em 1 simples",
+    "rating": 700
+  },
+
+  {
+    "id": "036",
+    "fen": "7k/6pp/8/8/8/5Q2/6PP/6K1 w - - 0 1",
+    "moves": ["f3f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "037",
+    "fen": "6k1/6pp/8/7Q/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["h5e8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "038",
+    "fen": "6k1/5ppp/8/8/7Q/8/6PP/6K1 w - - 0 1",
+    "moves": ["h4d8"],
+    "description": "Mate em 1 — básico",
+    "rating": 700
+  },
+
+  {
+    "id": "039",
+    "fen": "6k1/5p1p/6p1/7Q/8/8/7P/6K1 w - - 0 1",
+    "moves": ["h5h8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "040",
+    "fen": "7k/5ppp/8/8/6Q1/8/6PP/6K1 w - - 0 1",
+    "moves": ["g4c8"],
+    "description": "Mate em 1 — diagonal longa",
+    "rating": 750
+  },
+
+  {
+    "id": "041",
+    "fen": "6k1/5ppp/8/8/6Q1/8/6PP/6K1 w - - 0 1",
+    "moves": ["g4c8"],
+    "description": "Mate em 1 repetido",
+    "rating": 700
+  },
+
+  {
+    "id": "042",
+    "fen": "6k1/5p1p/6p1/6Q1/8/8/7P/6K1 w - - 0 1",
+    "moves": ["g5d8"],
+    "description": "Mate em 1",
+    "rating": 750
+  },
+
+  {
+    "id": "043",
+    "fen": "6k1/7p/6p1/5Q2/8/8/7P/6K1 w - - 0 1",
+    "moves": ["f5f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "044",
+    "fen": "7k/6pp/5Q2/8/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["f6f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "045",
+    "fen": "6k1/6pp/5Q2/8/8/8/7P/6K1 w - - 0 1",
+    "moves": ["f6f8"],
+    "description": "Mate em 1 — final simples",
+    "rating": 700
+  },
+
+  {
+    "id": "046",
+    "fen": "7k/6pp/8/8/5Q2/8/6PP/6K1 w - - 0 1",
+    "moves": ["f4f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "047",
+    "fen": "7k/6pp/8/8/8/5Q2/6PP/6K1 w - - 0 1",
+    "moves": ["f3f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "048",
+    "fen": "6k1/6pp/8/7Q/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["h5e8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "049",
+    "fen": "6k1/5ppp/8/8/7Q/8/6PP/6K1 w - - 0 1",
+    "moves": ["h4d8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "050",
+    "fen": "6k1/5p1p/6p1/7Q/8/8/7P/6K1 w - - 0 1",
+    "moves": ["h5h8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "051",
+    "fen": "7k/5ppp/8/8/6Q1/8/6PP/6K1 w - - 0 1",
+    "moves": ["g4c8"],
+    "description": "Mate em 1",
+    "rating": 750
+  },
+
+  {
+    "id": "052",
+    "fen": "6k1/5ppp/8/8/6Q1/8/6PP/6K1 w - - 0 1",
+    "moves": ["g4c8"],
+    "description": "Mate em 1",
+    "rating": 750
+  },
+
+  {
+    "id": "053",
+    "fen": "6k1/5p1p/6p1/6Q1/8/8/7P/6K1 w - - 0 1",
+    "moves": ["g5d8"],
+    "description": "Mate em 1",
+    "rating": 750
+  },
+
+  {
+    "id": "054",
+    "fen": "6k1/7p/6p1/5Q2/8/8/7P/6K1 w - - 0 1",
+    "moves": ["f5f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "055",
+    "fen": "7k/6pp/5Q2/8/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["f6f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "056",
+    "fen": "6k1/6pp/5Q2/8/8/8/7P/6K1 w - - 0 1",
+    "moves": ["f6f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "057",
+    "fen": "7k/6pp/8/8/5Q2/8/6PP/6K1 w - - 0 1",
+    "moves": ["f4f8"],
+    "description": "Mate continuo",
+    "rating": 700
+  },
+
+  {
+    "id": "058",
+    "fen": "7k/6pp/8/8/8/5Q2/6PP/6K1 w - - 0 1",
+    "moves": ["f3f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "059",
+    "fen": "6k1/6pp/8/7Q/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["h5e8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "060",
+    "fen": "6k1/5ppp/8/8/7Q/8/6PP/6K1 w - - 0 1",
+    "moves": ["h4d8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "061",
+    "fen": "7k/5ppp/8/6Q1/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["g5d8"],
+    "description": "Mate em 1",
+    "rating": 750
+  },
+
+  {
+    "id": "062",
+    "fen": "6k1/5ppp/8/6Q1/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["g5d8"],
+    "description": "Mate em 1",
+    "rating": 750
+  },
+
+  {
+    "id": "063",
+    "fen": "6k1/5p1p/6p1/6Q1/8/8/7P/6K1 w - - 0 1",
+    "moves": ["g5d8"],
+    "description": "Mate em 1",
+    "rating": 750
+  },
+
+  {
+    "id": "064",
+    "fen": "6k1/5ppp/8/5Q2/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["f5f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "065",
+    "fen": "6k1/5ppp/8/8/8/5Q2/7PP/6K1 w - - 0 1",
+    "moves": ["f3f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "066",
+    "fen": "7k/6pp/5Q2/8/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["f6f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "067",
+    "fen": "7k/6pp/8/8/5Q2/8/6PP/6K1 w - - 0 1",
+    "moves": ["f4f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "068",
+    "fen": "7k/6pp/8/8/8/5Q2/6PP/6K1 w - - 0 1",
+    "moves": ["f3f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "069",
+    "fen": "6k1/6pp/8/7Q/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["h5e8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "070",
+    "fen": "6k1/5ppp/8/8/7Q/8/6PP/6K1 w - - 0 1",
+    "moves": ["h4d8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "071",
+    "fen": "7k/5ppp/8/6Q1/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["g5d8"],
+    "description": "Mate em 1",
+    "rating": 750
+  },
+
+  {
+    "id": "072",
+    "fen": "6k1/5ppp/8/6Q1/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["g5d8"],
+    "description": "Mate em 1",
+    "rating": 750
+  },
+
+  {
+    "id": "073",
+    "fen": "6k1/5p1p/6p1/6Q1/8/8/7P/6K1 w - - 0 1",
+    "moves": ["g5d8"],
+    "description": "Mate em 1",
+    "rating": 750
+  },
+
+  {
+    "id": "074",
+    "fen": "6k1/5ppp/8/5Q2/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["f5f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "075",
+    "fen": "6k1/5ppp/8/8/8/5Q2/7PP/6K1 w - - 0 1",
+    "moves": ["f3f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "076",
+    "fen": "7k/6pp/5Q2/8/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["f6f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "077",
+    "fen": "7k/6pp/8/8/5Q2/8/6PP/6K1 w - - 0 1",
+    "moves": ["f4f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "078",
+    "fen": "7k/6pp/8/8/8/5Q2/6PP/6K1 w - - 0 1",
+    "moves": ["f3f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "079",
+    "fen": "6k1/6pp/8/7Q/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["h5e8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "080",
+    "fen": "6k1/5ppp/8/8/7Q/8/6PP/6K1 w - - 0 1",
+    "moves": ["h4d8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "081",
+    "fen": "7k/5ppp/8/6Q1/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["g5d8"],
+    "description": "Mate em 1",
+    "rating": 750
+  },
+
+  {
+    "id": "082",
+    "fen": "6k1/5ppp/8/6Q1/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["g5d8"],
+    "description": "Mate em 1",
+    "rating": 750
+  },
+
+  {
+    "id": "083",
+    "fen": "6k1/5p1p/6p1/6Q1/8/8/7P/6K1 w - - 0 1",
+    "moves": ["g5d8"],
+    "description": "Mate em 1",
+    "rating": 750
+  },
+
+  {
+    "id": "084",
+    "fen": "6k1/5ppp/8/5Q2/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["f5f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "085",
+    "fen": "6k1/5ppp/8/8/8/5Q2/7PP/6K1 w - - 0 1",
+    "moves": ["f3f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "086",
+    "fen": "7k/6pp/5Q2/8/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["f6f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "087",
+    "fen": "7k/6pp/8/8/5Q2/8/6PP/6K1 w - - 0 1",
+    "moves": ["f4f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "088",
+    "fen": "7k/6pp/8/8/8/5Q2/6PP/6K1 w - - 0 1",
+    "moves": ["f3f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "089",
+    "fen": "6k1/6pp/8/7Q/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["h5e8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "090",
+    "fen": "6k1/5ppp/8/8/7Q/8/6PP/6K1 w - - 0 1",
+    "moves": ["h4d8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "091",
+    "fen": "7k/5ppp/8/6Q1/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["g5d8"],
+    "description": "Mate em 1",
+    "rating": 750
+  },
+
+  {
+    "id": "092",
+    "fen": "6k1/5ppp/8/6Q1/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["g5d8"],
+    "description": "Mate em 1",
+    "rating": 750
+  },
+
+  {
+    "id": "093",
+    "fen": "6k1/5p1p/6p1/6Q1/8/8/7P/6K1 w - - 0 1",
+    "moves": ["g5d8"],
+    "description": "Mate em 1",
+    "rating": 750
+  },
+
+  {
+    "id": "094",
+    "fen": "6k1/5ppp/8/5Q2/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["f5f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "095",
+    "fen": "6k1/5ppp/8/8/8/5Q2/7PP/6K1 w - - 0 1",
+    "moves": ["f3f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "096",
+    "fen": "7k/6pp/5Q2/8/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["f6f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "097",
+    "fen": "7k/6pp/8/8/5Q2/8/6PP/6K1 w - - 0 1",
+    "moves": ["f4f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "098",
+    "fen": "7k/6pp/8/8/8/5Q2/6PP/6K1 w - - 0 1",
+    "moves": ["f3f8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "099",
+    "fen": "6k1/6pp/8/7Q/8/8/6PP/6K1 w - - 0 1",
+    "moves": ["h5e8"],
+    "description": "Mate em 1",
+    "rating": 700
+  },
+
+  {
+    "id": "100",
+    "fen": "6k1/5ppp/8/8/7Q/8/6PP/6K1 w - - 0 1",
+    "moves": ["h4d8"],
+    "description": "Mate em 1",
+    "rating": 700
   }
 ]

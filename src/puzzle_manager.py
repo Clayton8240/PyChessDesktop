@@ -51,3 +51,10 @@ class PuzzleManager:
             self.move_index += 1
             return chess.Move.from_uci(uci)
         return None
+
+    def get_solution_move(self):
+        """Retorna o próximo movimento correto (chess.Move) para dar a dica."""
+        if self.move_index < len(self.puzzle_moves):
+            uci = self.puzzle_moves[self.move_index]
+            return chess.Move.from_uci(uci)
+        return None
