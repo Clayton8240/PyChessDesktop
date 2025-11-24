@@ -92,6 +92,7 @@ def main():
     dificuldade = 2
     tempo_escolhido = 600
     ultima_dica_ia = None
+    ultima_dica_move = None  # Guarda o movimento sugerido para desenhar seta
 
     # --- Notificações ---
     aviso_texto = ""
@@ -343,6 +344,7 @@ def main():
                         if move:
                             selecionado = move.from_square
                             ultima_dica_ia = f"Dica: {chess.square_name(move.from_square)}->{chess.square_name(move.to_square)}"
+                            ultima_dica_move = move
                             sound_manager.play('hint')
                     elif event.key == pygame.K_s:
                         if (pygame.key.get_mods() & pygame.KMOD_CTRL): # Ctrl+S = Salvar
@@ -408,6 +410,7 @@ def main():
                                     realizar_jogada(engine, move, display_board, sound_manager)
                                     eval_bar.update(evaluate_board(engine.board))
                                     selecionado = None; aguardando_ia = True
+                                    ultima_dica_move = None  # Limpa seta de dica após jogada
                                 else:
                                     p = engine.board.piece_at(square)
                                     if p and p.color == (chess.WHITE if jogador_brancas else chess.BLACK):
@@ -509,6 +512,10 @@ def main():
 
         elif estado_atual == ESTADO_SIMULACAO:
             display_board.draw(engine.board)
+            # Desenha seta do movimento atual do replay
+            if sim_index > 0 and sim_index <= len(sim_moves):
+                move = sim_moves[sim_index-1]
+                display_board.draw_arrow(move.from_square, move.to_square, color=(255,140,0,180), width=12)
             eval_bar.draw(screen)
             
             # Painel Lateral de Simulação
@@ -642,6 +649,12 @@ def main():
             if ultima_dica_ia:
                 screen.blit(fonte_small.render("Dica IA:", True, (100,255,100)), (670, 200))
                 screen.blit(fonte_small.render(ultima_dica_ia.replace("Dica: ",""), True, (200,200,200)), (670, 230))
+                # Desenha seta de dica
+                if ultima_dica_move:
+                    display_board.draw_arrow(ultima_dica_move.from_square, ultima_dica_move.to_square, color=(0,180,255,160), width=10)
+                    # Limpa a dica se sair do estado jogando
+                    if estado_atual != ESTADO_JOGANDO:
+                        ultima_dica_move = None
             
             if promocao_pendente and quadrado_promocao is not None:
                 c = chess.square_file(quadrado_promocao)

@@ -1,0 +1,23 @@
+[
+  {
+    "id": "001",
+    "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4",
+    "moves": ["h5f7"],
+    "description": "Mate do Pastor (Mate em 1)",
+    "rating": 800
+  },
+  {
+    "id": "002",
+    "fen": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq - 0 2",
+    "moves": ["d8h4"],
+    "description": "Mate do Louco (Mate em 1)",
+    "rating": 800
+  },
+  {
+    "id": "003",
+    "fen": "r1b1k1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1qPP/RNBQ1K1R w kq - 0 6",
+    "moves": ["d2d4", "c5d4"],
+    "description": "Defesa contra Ataque (Encontre o melhor lance)",
+    "rating": 1000
+  }
+]

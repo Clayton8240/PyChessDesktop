@@ -168,140 +168,186 @@ import os
 import chess
 
 class DisplayBoard:
-	def draw_valid_moves(self, board, selected_square):
-		if selected_square is None:
-			return
+		def draw_arrow(self, from_sq, to_sq, color=(0, 180, 255, 160), width=8, head_length=28, head_angle=28):
+			"""
+			Desenha uma seta translúcida do quadrado from_sq para to_sq.
+			color: RGBA (padrão: azul neon translúcido)
+			width: largura do corpo da seta
+			head_length: comprimento da cabeça da seta
+			head_angle: abertura da cabeça da seta (graus)
+			"""
+			import pygame
+			import math
+			# 1. Converte casas para coordenadas de pixel (centro do quadrado)
+			col_from = chess.square_file(from_sq)
+			row_from = 7 - chess.square_rank(from_sq)
+			col_to = chess.square_file(to_sq)
+			row_to = 7 - chess.square_rank(to_sq)
+			if self.is_flipped:
+				draw_col_from = 7 - col_from
+				draw_row_from = 7 - row_from
+				draw_col_to = 7 - col_to
+				draw_row_to = 7 - row_to
+			else:
+				draw_col_from = col_from
+				draw_row_from = row_from
+				draw_col_to = col_to
+				draw_row_to = row_to
+			x1 = draw_col_from * self.sq_size + self.sq_size // 2
+			y1 = draw_row_from * self.sq_size + self.sq_size // 2
+			x2 = draw_col_to * self.sq_size + self.sq_size // 2
+			y2 = draw_row_to * self.sq_size + self.sq_size // 2
+			# 2. Desenha corpo da seta
+			arrow_surface = pygame.Surface(self.screen.get_size(), pygame.SRCALPHA)
+			pygame.draw.line(arrow_surface, color, (x1, y1), (x2, y2), width)
+			# 3. Calcula cabeça da seta
+			dx = x2 - x1
+			dy = y2 - y1
+			angle = math.atan2(dy, dx)
+			# Pontos da cabeça
+			angle1 = angle + math.radians(head_angle)
+			angle2 = angle - math.radians(head_angle)
+			x3 = x2 - head_length * math.cos(angle1)
+			y3 = y2 - head_length * math.sin(angle1)
+			x4 = x2 - head_length * math.cos(angle2)
+			y4 = y2 - head_length * math.sin(angle2)
+			pygame.draw.polygon(arrow_surface, color, [(x2, y2), (x3, y3), (x4, y4)])
+			# 4. Blit na tela
+			self.screen.blit(arrow_surface, (0, 0))
+		def draw_valid_moves(self, board, selected_square):
+			if selected_square is None:
+				return
 
-		# Cria uma superfície transparente para as bolinhas
-		surface = pygame.Surface((self.sq_size, self.sq_size), pygame.SRCALPHA)
-		color = (50, 50, 50, 100)  # Cinza escuro semi-transparente
-		radius = int(self.sq_size * 0.15)
-		center = int(self.sq_size / 2)
-		pygame.draw.circle(surface, color, (center, center), radius)
+			# Cria uma superfície transparente para as bolinhas
+			surface = pygame.Surface((self.sq_size, self.sq_size), pygame.SRCALPHA)
+			color = (50, 50, 50, 100)  # Cinza escuro semi-transparente
+			radius = int(self.sq_size * 0.15)
+			center = int(self.sq_size / 2)
+			pygame.draw.circle(surface, color, (center, center), radius)
 
-		# Itera sobre todos os movimentos legais para achar os da peça selecionada
-		for move in board.legal_moves:
-			if move.from_square == selected_square:
-				dest_col = chess.square_file(move.to_square)
-				dest_row = 7 - chess.square_rank(move.to_square)
-				# Corrige para flip do tabuleiro
-				if self.is_flipped:
-					draw_col = 7 - dest_col
-					draw_row = 7 - dest_row
-				else:
-					draw_col = dest_col
-					draw_row = dest_row
-				self.screen.blit(surface, (draw_col * self.sq_size, draw_row * self.sq_size))
-	def __init__(self, screen, tamanho_quadrado=80, tema='classico'):
-		self.screen = screen
-		self.sq_size = tamanho_quadrado
-		self.images = {}
-		self._carregar_imagens()
-		self.active_animation = None
-		self.animating_dest_square = None
-		self.is_flipped = False
-		self.tema = tema
-		self.tema_cores = THEMES.get(tema, THEMES['classico'])
+			# Itera sobre todos os movimentos legais para achar os da peça selecionada
+			for move in board.legal_moves:
+				if move.from_square == selected_square:
+					dest_col = chess.square_file(move.to_square)
+					dest_row = 7 - chess.square_rank(move.to_square)
+					# Corrige para flip do tabuleiro
+					if self.is_flipped:
+						draw_col = 7 - dest_col
+						draw_row = 7 - dest_row
+					else:
+						draw_col = dest_col
+						draw_row = dest_row
+					self.screen.blit(surface, (draw_col * self.sq_size, draw_row * self.sq_size))
+		def __init__(self, screen, tamanho_quadrado=80, tema='classico'):
+			self.screen = screen
+			self.sq_size = tamanho_quadrado
+			self.images = {}
+			self._carregar_imagens()
+			self.active_animation = None
+			self.animating_dest_square = None
+			self.is_flipped = False
+			self.tema = tema
+			self.tema_cores = THEMES.get(tema, THEMES['classico'])
 
-	def set_tema(self, tema):
-		self.tema = tema
-		self.tema_cores = THEMES.get(tema, THEMES['classico'])
+		def set_tema(self, tema):
+			self.tema = tema
+			self.tema_cores = THEMES.get(tema, THEMES['classico'])
 
-	def set_flip(self, flip):
-		self.is_flipped = flip
-	def animate_move(self, move, board):
-		piece = board.piece_at(move.from_square)
-		if not piece:
-			return
-		img = self.images.get((piece.piece_type, piece.color))
-		if not img:
-			return
+		def set_flip(self, flip):
+			self.is_flipped = flip
+		def animate_move(self, move, board):
+			piece = board.piece_at(move.from_square)
+			if not piece:
+				return
+			img = self.images.get((piece.piece_type, piece.color))
+			if not img:
+				return
 
-		# 1. Calcula coordenadas lógicas (Padrão: Brancas embaixo)
-		col_from = chess.square_file(move.from_square)
-		row_from = 7 - chess.square_rank(move.from_square)
-		col_to = chess.square_file(move.to_square)
-		row_to = 7 - chess.square_rank(move.to_square)
+			# 1. Calcula coordenadas lógicas (Padrão: Brancas embaixo)
+			col_from = chess.square_file(move.from_square)
+			row_from = 7 - chess.square_rank(move.from_square)
+			col_to = chess.square_file(move.to_square)
+			row_to = 7 - chess.square_rank(move.to_square)
 
-		# 2. Aplica o Flip se necessário (Inverte espelhado)
-		if self.is_flipped:
-			start_col = 7 - col_from
-			start_row = 7 - row_from
-			end_col = 7 - col_to
-			end_row = 7 - row_to
-		else:
-			start_col = col_from
-			start_row = row_from
-			end_col = col_to
-			end_row = row_to
+			# 2. Aplica o Flip se necessário (Inverte espelhado)
+			if self.is_flipped:
+				start_col = 7 - col_from
+				start_row = 7 - row_from
+				end_col = 7 - col_to
+				end_row = 7 - row_to
+			else:
+				start_col = col_from
+				start_row = row_from
+				end_col = col_to
+				end_row = row_to
 
-		# 3. Converte para Pixels
-		start_pos = (start_col * self.sq_size, start_row * self.sq_size)
-		end_pos = (end_col * self.sq_size, end_row * self.sq_size)
+			# 3. Converte para Pixels
+			start_pos = (start_col * self.sq_size, start_row * self.sq_size)
+			end_pos = (end_col * self.sq_size, end_row * self.sq_size)
 
-		self.active_animation = PieceAnimation(start_pos, end_pos, img)
-		self.animating_dest_square = move.to_square
+			self.active_animation = PieceAnimation(start_pos, end_pos, img)
+			self.animating_dest_square = move.to_square
 
-	def _carregar_imagens(self):
-		# Mapeia peças do python-chess para nomes de arquivos
-		pieces = {chess.PAWN: 'p', chess.ROOK: 'r', chess.KNIGHT: 'n',
-				  chess.BISHOP: 'b', chess.QUEEN: 'q', chess.KING: 'k'}
-		base_path = os.path.join("assets", "images", "pieces")
-		for piece_type, char in pieces.items():
-			for color, prefix in [(chess.WHITE, 'w'), (chess.BLACK, 'b')]:
-				filename = f"{prefix}_{char}.png"
-				try:
-					img = pygame.image.load(os.path.join(base_path, filename))
-					img = pygame.transform.scale(img, (self.sq_size, self.sq_size))
-					self.images[(piece_type, color)] = img
-				except FileNotFoundError:
-					print(f"Erro: Imagem {filename} não encontrada.")
+		def _carregar_imagens(self):
+			# Mapeia peças do python-chess para nomes de arquivos
+			pieces = {chess.PAWN: 'p', chess.ROOK: 'r', chess.KNIGHT: 'n',
+					chess.BISHOP: 'b', chess.QUEEN: 'q', chess.KING: 'k'}
+			base_path = os.path.join("assets", "images", "pieces")
+			for piece_type, char in pieces.items():
+				for color, prefix in [(chess.WHITE, 'w'), (chess.BLACK, 'b')]:
+					filename = f"{prefix}_{char}.png"
+					try:
+						img = pygame.image.load(os.path.join(base_path, filename))
+						img = pygame.transform.scale(img, (self.sq_size, self.sq_size))
+						self.images[(piece_type, color)] = img
+					except FileNotFoundError:
+						print(f"Erro: Imagem {filename} não encontrada.")
 
-	def draw(self, board):
-		# Atualiza o estado da animação (se houver)
-		if self.active_animation:
-			self.active_animation.update()
-			if self.active_animation.finished:
-				self.active_animation = None
-				self.animating_dest_square = None
+		def draw(self, board):
+			# Atualiza o estado da animação (se houver)
+			if self.active_animation:
+				self.active_animation.update()
+				if self.active_animation.finished:
+					self.active_animation = None
+					self.animating_dest_square = None
 
-		# 1. Desenha o Grid
-		for r in range(8):
-			for c in range(8):
-				draw_c = 7 - c if self.is_flipped else c
-				draw_r = 7 - r if self.is_flipped else r
-				# Escolhe cor do tema
-				if self.tema == 'retro':
-					# Pixelado: desenha quadrados "pixel" (8x8)
-					color = self.tema_cores['light'] if (r + c) % 2 == 0 else self.tema_cores['dark']
-					rect = pygame.Rect(draw_c * self.sq_size, draw_r * self.sq_size, self.sq_size, self.sq_size)
-					for y in range(0, self.sq_size, 10):
-						for x in range(0, self.sq_size, 10):
-							pygame.draw.rect(self.screen, color, (rect.x + x, rect.y + y, 10, 10))
-				else:
-					color = self.tema_cores['light'] if (r + c) % 2 == 0 else self.tema_cores['dark']
-					rect = pygame.Rect(draw_c * self.sq_size, draw_r * self.sq_size, self.sq_size, self.sq_size)
-					pygame.draw.rect(self.screen, color, rect)
+			# 1. Desenha o Grid
+			for r in range(8):
+				for c in range(8):
+					draw_c = 7 - c if self.is_flipped else c
+					draw_r = 7 - r if self.is_flipped else r
+					# Escolhe cor do tema
+					if self.tema == 'retro':
+						# Pixelado: desenha quadrados "pixel" (8x8)
+						color = self.tema_cores['light'] if (r + c) % 2 == 0 else self.tema_cores['dark']
+						rect = pygame.Rect(draw_c * self.sq_size, draw_r * self.sq_size, self.sq_size, self.sq_size)
+						for y in range(0, self.sq_size, 10):
+							for x in range(0, self.sq_size, 10):
+								pygame.draw.rect(self.screen, color, (rect.x + x, rect.y + y, 10, 10))
+					else:
+						color = self.tema_cores['light'] if (r + c) % 2 == 0 else self.tema_cores['dark']
+						rect = pygame.Rect(draw_c * self.sq_size, draw_r * self.sq_size, self.sq_size, self.sq_size)
+						pygame.draw.rect(self.screen, color, rect)
 
-		# 2. Desenha as Peças
-		for square in chess.SQUARES:
-			# Se uma animação está acontecendo indo para ESTA casa, não desenha a peça estática
-			if self.animating_dest_square is not None and square == self.animating_dest_square:
-				continue
-			piece = board.piece_at(square)
-			if piece:
-				col = chess.square_file(square)
-				row = 7 - chess.square_rank(square)
-				# Flip visual
-				draw_col = 7 - col if self.is_flipped else col
-				draw_row = 7 - row if self.is_flipped else row
-				img = self.images.get((piece.piece_type, piece.color))
-				if img:
-					self.screen.blit(img, (draw_col * self.sq_size, draw_row * self.sq_size))
+			# 2. Desenha as Peças
+			for square in chess.SQUARES:
+				# Se uma animação está acontecendo indo para ESTA casa, não desenha a peça estática
+				if self.animating_dest_square is not None and square == self.animating_dest_square:
+					continue
+				piece = board.piece_at(square)
+				if piece:
+					col = chess.square_file(square)
+					row = 7 - chess.square_rank(square)
+					# Flip visual
+					draw_col = 7 - col if self.is_flipped else col
+					draw_row = 7 - row if self.is_flipped else row
+					img = self.images.get((piece.piece_type, piece.color))
+					if img:
+						self.screen.blit(img, (draw_col * self.sq_size, draw_row * self.sq_size))
 
-		# 3. Desenha a Peça Animada por cima de tudo
-		if self.active_animation:
-			self.active_animation.draw(self.screen)
-# --- Cores padrão para LeaderboardView (Ranking) ---
+			# 3. Desenha a Peça Animada por cima de tudo
+			if self.active_animation:
+				self.active_animation.draw(self.screen)
+	# --- Cores padrão para LeaderboardView (Ranking) ---
 WOOD_LIGHT = (240, 217, 181)
 WOOD_DARK = (181, 136, 99)
