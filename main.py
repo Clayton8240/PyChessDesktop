@@ -6,6 +6,7 @@ from src.ui import TextInput, LeaderboardView, DisplayBoard
 from src.engine import Engine
 from src.scoring import ScoreManager
 from src.ai import movimento_aleatorio
+from src.sound import SoundManager
 
 # Função auxiliar para calcular material (insira aqui ou no engine.py)
 def calcular_material(board, is_white_player):
@@ -17,6 +18,54 @@ def calcular_material(board, is_white_player):
         if piece and piece.color == cor_jogador and piece.piece_type != chess.KING:
             pontos += valores.get(piece.piece_type, 0)
     return pontos
+
+# --- Função Auxiliar de Movimento Seguro ---
+def realizar_jogada(engine, move, display_board, sound_manager):
+    """Executa som, animação e lógica de uma vez só."""
+    display_board.animate_move(move, engine.board)
+    if engine.board.piece_at(move.to_square) is not None:
+        tocar_som_acao(engine.board, move, sound_manager, acao='capture')
+    else:
+        tocar_som_acao(engine.board, move, sound_manager, acao='move')
+    engine.board.push(move)
+
+def tocar_som_acao(board, move, sound_manager, acao='move'):
+    """Escolhe o som correto para a ação de acordo com a peça e tipo de jogada."""
+    peca = None
+    alvo = None
+    if move is not None:
+        peca = board.piece_at(move.from_square)
+        alvo = board.piece_at(move.to_square)
+    if acao == 'move':
+        if peca:
+            if peca.piece_type == chess.PAWN:
+                sound_manager.play('pawn_move')
+            elif peca.piece_type == chess.KING:
+                sound_manager.play('king_move')
+            else:
+                sound_manager.play('move')
+        else:
+            sound_manager.play('move')
+    elif acao == 'capture':
+        if peca:
+            if peca.piece_type == chess.PAWN:
+                sound_manager.play('pawn_capture')
+            elif peca.piece_type == chess.KING:
+                sound_manager.play('king_capture')
+            else:
+                sound_manager.play('capture')
+        else:
+            sound_manager.play('capture')
+    elif acao == 'hint':
+        sound_manager.play('hint')
+    elif acao == 'menu':
+        sound_manager.play('menu')
+    elif acao == 'undo':
+        sound_manager.play('undo')
+    elif acao == 'game_over':
+        sound_manager.play('game_over')
+    elif acao == 'defeat':
+        sound_manager.play('defeat')
 
 # Estados do Jogo
 ESTADO_MENU = 0
@@ -38,6 +87,7 @@ def main():
     score_manager = ScoreManager()
     display_board = DisplayBoard(screen, tamanho_quadrado=80)
     input_nome = TextInput(pygame.font.SysFont("consolas", 30), rect=pygame.Rect(170, 300, 300, 50))
+    sound_manager = SoundManager()
     
     estado_atual = ESTADO_MENU
 
@@ -76,8 +126,10 @@ def main():
                     if btn_novo.collidepoint(event.pos):
                         selecionado = None
                         aguardando_ia = False
+                        tocar_som_acao(engine.board, None, sound_manager, acao='menu')
                         estado_atual = ESTADO_ESCOLHA_COR
                     elif btn_pont.collidepoint(event.pos):
+                        tocar_som_acao(engine.board, None, sound_manager, acao='menu')
                         estado_atual = ESTADO_RANKING
 
             # --- Tela de escolha de cor ---
@@ -85,31 +137,37 @@ def main():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_b:
                         jogador_brancas = True
+                        tocar_som_acao(engine.board, None, sound_manager, acao='menu')
                         estado_atual = ESTADO_JOGANDO
                     elif event.key == pygame.K_p:
                         jogador_brancas = False
+                        tocar_som_acao(engine.board, None, sound_manager, acao='menu')
                         estado_atual = ESTADO_JOGANDO
                         if engine.board.turn == chess.WHITE:
                             move = movimento_aleatorio(engine.board)
                             if move:
                                 engine.board.push(move)
+                                sound_manager.play('move')
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if btn_brancas.collidepoint(event.pos):
                         jogador_brancas = True
                         engine.start()
                         selecionado = None
                         aguardando_ia = False
+                        tocar_som_acao(engine.board, None, sound_manager, acao='menu')
                         estado_atual = ESTADO_JOGANDO
                     elif btn_pretas.collidepoint(event.pos):
                         jogador_brancas = False
                         engine.start()
                         selecionado = None
                         aguardando_ia = False
+                        tocar_som_acao(engine.board, None, sound_manager, acao='menu')
                         estado_atual = ESTADO_JOGANDO
                         if engine.board.turn == chess.WHITE:
                             move = movimento_aleatorio(engine.board)
                             if move:
                                 engine.board.push(move)
+                                tocar_som_acao(engine.board, move, sound_manager, acao='move')
 
             # --- Lógica de Input de Nome ---
             elif estado_atual == ESTADO_INPUT_NOME:
@@ -127,15 +185,19 @@ def main():
                     if event.key == pygame.K_z and (pygame.key.get_mods() & pygame.KMOD_CTRL):
                         # Precisamos ter pelo menos 2 movimentos (1 seu, 1 da IA) para desfazer o par
                         if len(engine.board.move_stack) >= 2:
+                            # Cancela animação se houver
+                            display_board.active_animation = None
+                            display_board.animating_dest_square = None
                             engine.board.pop() # Desfaz jogada da IA
                             engine.board.pop() # Desfaz sua jogada
                             selecionado = None # Limpa seleção
-                            # sound_manager.play('move') # Feedback sonoro (opcional)
+                            tocar_som_acao(engine.board, None, sound_manager, acao='undo')
                     # 2. NOVO JOGO (F2)
                     elif event.key == pygame.K_F2:
                         engine.start() # Reseta tabuleiro e tempo
                         selecionado = None
                         aguardando_ia = False
+                        sound_manager.play('move')
                         estado_atual = ESTADO_ESCOLHA_COR # Volta para escolher cor
                     # 3. AJUDA / DICA (H)
                     elif event.key == pygame.K_h:
@@ -144,6 +206,7 @@ def main():
                         if move:
                             # Efeito visual: Seleciona a peça sugerida para o jogador ver
                             selecionado = move.from_square
+                            tocar_som_acao(engine.board, move, sound_manager, acao='hint')
                             print(f"Dica da IA: Mover de {chess.square_name(move.from_square)} para {chess.square_name(move.to_square)}")
                     # Atalho para testar fim de jogo (ESPAÇO)
                     elif event.key == pygame.K_SPACE:
@@ -165,6 +228,7 @@ def main():
                             piece = engine.board.piece_at(square)
                             if piece and piece.color == (chess.WHITE if jogador_brancas else chess.BLACK):
                                 selecionado = square
+                                sound_manager.play('move')
                         else:
                             # Tenta mover
                             move = chess.Move(selecionado, square)
@@ -173,7 +237,7 @@ def main():
                                 move = chess.Move(selecionado, square, promotion=chess.QUEEN)
 
                             if move in engine.board.legal_moves and engine.board.piece_at(selecionado).color == (chess.WHITE if jogador_brancas else chess.BLACK):
-                                engine.board.push(move)
+                                realizar_jogada(engine, move, display_board, sound_manager)
                                 selecionado = None
                                 aguardando_ia = True # Passa a vez
                             else:
@@ -181,6 +245,7 @@ def main():
                                 piece = engine.board.piece_at(square)
                                 if piece and piece.color == (chess.WHITE if jogador_brancas else chess.BLACK):
                                     selecionado = square
+                                    sound_manager.play('move')
                                 else:
                                     selecionado = None
 
@@ -195,6 +260,11 @@ def main():
                 material = calcular_material(engine.board, jogador_brancas)
                 pontuacao_final = score_manager.calcular_pontuacao(venceu, material, tempo_decorrido)
 
+                if venceu:
+                    tocar_som_acao(engine.board, None, sound_manager, acao='game_over')
+                else:
+                    tocar_som_acao(engine.board, None, sound_manager, acao='defeat')
+
                 if score_manager.check_is_highscore(pontuacao_final):
                     input_nome.text = ""
                     input_nome.active = True
@@ -205,7 +275,7 @@ def main():
             elif aguardando_ia:
                 move = movimento_aleatorio(engine.board)
                 if move:
-                    engine.board.push(move)
+                    realizar_jogada(engine, move, display_board, sound_manager)
                 aguardando_ia = False
 
         # --- Renderização ---

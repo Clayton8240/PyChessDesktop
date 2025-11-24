@@ -1,3 +1,30 @@
+import math # Importante para a animação suave
+class PieceAnimation:
+	def __init__(self, start_pos, end_pos, image, duration=250):
+		self.start_x, self.start_y = start_pos
+		self.end_x, self.end_y = end_pos
+		self.image = image
+		self.duration = duration
+		self.start_time = pygame.time.get_ticks()
+		self.finished = False
+		self.current_x = self.start_x
+		self.current_y = self.start_y
+
+	def update(self):
+		now = pygame.time.get_ticks()
+		elapsed = now - self.start_time
+		t = min(elapsed / self.duration, 1.0)
+		t = 1 - pow(1 - t, 3)  # Ease-out cubic
+		if t >= 1.0:
+			self.finished = True
+			self.current_x = self.end_x
+			self.current_y = self.end_y
+		else:
+			self.current_x = self.start_x + (self.end_x - self.start_x) * t
+			self.current_y = self.start_y + (self.end_y - self.start_y) * t
+
+	def draw(self, screen):
+		screen.blit(self.image, (self.current_x, self.current_y))
 
 # Interface gráfica e input de texto
 import pygame
@@ -101,6 +128,23 @@ class DisplayBoard:
 		self.sq_size = tamanho_quadrado
 		self.images = {}
 		self._carregar_imagens()
+		self.active_animation = None
+		self.animating_dest_square = None
+	def animate_move(self, move, board):
+		piece = board.piece_at(move.from_square)
+		if not piece:
+			return
+		img = self.images.get((piece.piece_type, piece.color))
+		if not img:
+			return
+		start_col = chess.square_file(move.from_square)
+		start_row = 7 - chess.square_rank(move.from_square)
+		start_pos = (start_col * self.sq_size, start_row * self.sq_size)
+		end_col = chess.square_file(move.to_square)
+		end_row = 7 - chess.square_rank(move.to_square)
+		end_pos = (end_col * self.sq_size, end_row * self.sq_size)
+		self.active_animation = PieceAnimation(start_pos, end_pos, img)
+		self.animating_dest_square = move.to_square
 
 	def _carregar_imagens(self):
 		# Mapeia peças do python-chess para nomes de arquivos
@@ -118,14 +162,25 @@ class DisplayBoard:
 					print(f"Erro: Imagem {filename} não encontrada.")
 
 	def draw(self, board):
+		# Atualiza o estado da animação (se houver)
+		if self.active_animation:
+			self.active_animation.update()
+			if self.active_animation.finished:
+				self.active_animation = None
+				self.animating_dest_square = None
+
 		# 1. Desenha o Grid
 		for r in range(8):
 			for c in range(8):
 				color = WOOD_LIGHT if (r + c) % 2 == 0 else WOOD_DARK
 				rect = pygame.Rect(c * self.sq_size, r * self.sq_size, self.sq_size, self.sq_size)
 				pygame.draw.rect(self.screen, color, rect)
+
 		# 2. Desenha as Peças
 		for square in chess.SQUARES:
+			# Se uma animação está acontecendo indo para ESTA casa, não desenha a peça estática
+			if self.animating_dest_square is not None and square == self.animating_dest_square:
+				continue
 			piece = board.piece_at(square)
 			if piece:
 				col = chess.square_file(square)
@@ -133,3 +188,7 @@ class DisplayBoard:
 				img = self.images.get((piece.piece_type, piece.color))
 				if img:
 					self.screen.blit(img, (col * self.sq_size, row * self.sq_size))
+
+		# 3. Desenha a Peça Animada por cima de tudo
+		if self.active_animation:
+			self.active_animation.draw(self.screen)
