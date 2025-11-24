@@ -76,19 +76,20 @@ ESTADO_RANKING = 4
 
 def main():
     pygame.init()
+    fonte2 = pygame.font.SysFont("arial", 32, bold=True)
     screen = pygame.display.set_mode((840, 640)) # 80px * 8 casas + painel lateral
     pygame.display.set_caption("PyChess Desktop")
     clock = pygame.time.Clock()
-    
+
     # Inicialização
     engine = Engine()
     engine.start()
-    
+
     score_manager = ScoreManager()
     display_board = DisplayBoard(screen, tamanho_quadrado=80)
     input_nome = TextInput(pygame.font.SysFont("consolas", 30), rect=pygame.Rect(170, 300, 300, 50))
     sound_manager = SoundManager()
-    
+
     estado_atual = ESTADO_MENU
 
     # Variáveis de controle
@@ -98,7 +99,7 @@ def main():
     tempo_decorrido = 0
     jogador_brancas = True  # True = jogador é brancas, False = jogador é pretas
     dificuldade = 2 # Começa no Médio por padrão
-    
+
     # Variável para armazenar a última dica da IA
     ultima_dica_ia = None
 
@@ -111,6 +112,7 @@ def main():
         btn_pont = pygame.Rect(260, 320, 320, 50)
         btn_brancas = pygame.Rect(180, 250, 220, 50)
         btn_pretas = pygame.Rect(420, 250, 220, 50)
+        btn_som = pygame.Rect(760, 20, 60, 40)  # Botão de som no canto superior direito
 
         for event in eventos:
             if event.type == pygame.QUIT:
@@ -119,6 +121,15 @@ def main():
 
             # --- Menu Inicial ---
             if estado_atual == ESTADO_MENU:
+                # --- BOTÃO DE SOM ---
+                cor_som = (100, 200, 100) if sound_manager.enabled else (200, 100, 100)
+                texto_som = "ON" if sound_manager.enabled else "OFF"
+                pygame.draw.rect(screen, cor_som, btn_som, border_radius=5)
+                pygame.draw.rect(screen, (200, 200, 200), btn_som, 2, border_radius=5)
+                lbl_som = fonte2.render("Som", True, (200, 200, 200))
+                txt_btn_som = pygame.font.SysFont("arial", 18, bold=True).render(texto_som, True, (255,255,255))
+                screen.blit(lbl_som, (btn_som.x - 60, btn_som.y + 5))
+                screen.blit(txt_btn_som, (btn_som.x + 15, btn_som.y + 10))
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_1:
                         selecionado = None
@@ -135,16 +146,22 @@ def main():
                     elif btn_pont.collidepoint(event.pos):
                         tocar_som_acao(engine.board, None, sound_manager, acao='menu')
                         estado_atual = ESTADO_RANKING
+                    elif btn_som.collidepoint(event.pos):
+                        sound_manager.enabled = not sound_manager.enabled
+                        if sound_manager.enabled:
+                            sound_manager.play('menu')
 
             # --- Tela de escolha de cor ---
             elif estado_atual == ESTADO_ESCOLHA_COR:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_b:
                         jogador_brancas = True
+                        display_board.set_flip(False)
                         tocar_som_acao(engine.board, None, sound_manager, acao='menu')
                         estado_atual = ESTADO_JOGANDO
                     elif event.key == pygame.K_p:
                         jogador_brancas = False
+                        display_board.set_flip(True)
                         tocar_som_acao(engine.board, None, sound_manager, acao='menu')
                         estado_atual = ESTADO_JOGANDO
                         if engine.board.turn == chess.WHITE:
@@ -179,6 +196,7 @@ def main():
                     btn_pretas.y = 300
                     if btn_brancas.collidepoint(event.pos):
                         jogador_brancas = True
+                        display_board.set_flip(False)
                         engine.start()
                         selecionado = None
                         aguardando_ia = False
@@ -186,6 +204,7 @@ def main():
                         estado_atual = ESTADO_JOGANDO
                     elif btn_pretas.collidepoint(event.pos):
                         jogador_brancas = False
+                        display_board.set_flip(True)
                         engine.start()
                         selecionado = None
                         aguardando_ia = False
@@ -211,38 +230,38 @@ def main():
                 if event.type == pygame.KEYDOWN:
                     # 1. DESFAZER (Ctrl + Z)
                     if event.key == pygame.K_z and (pygame.key.get_mods() & pygame.KMOD_CTRL):
-                        # Precisamos ter pelo menos 2 movimentos (1 seu, 1 da IA) para desfazer o par
                         if len(engine.board.move_stack) >= 2:
-                            # Cancela animação se houver
                             display_board.active_animation = None
                             display_board.animating_dest_square = None
-                            engine.board.pop() # Desfaz jogada da IA
-                            engine.board.pop() # Desfaz sua jogada
-                            selecionado = None # Limpa seleção
+                            engine.board.pop()
+                            engine.board.pop()
+                            selecionado = None
                             tocar_som_acao(engine.board, None, sound_manager, acao='undo')
                     # 2. NOVO JOGO (F2)
                     elif event.key == pygame.K_F2:
-                        engine.start() # Reseta tabuleiro e tempo
+                        engine.start()
                         selecionado = None
                         aguardando_ia = False
                         sound_manager.play('move')
-                        estado_atual = ESTADO_ESCOLHA_COR # Volta para escolher cor
+                        estado_atual = ESTADO_ESCOLHA_COR
                     # 3. AJUDA / DICA (H)
                     elif event.key == pygame.K_h:
-                        # Pede para a IA calcular um movimento para VOCÊ (cor atual)
                         move = get_best_move(engine.board, dificuldade)
                         if move:
-                            # Efeito visual: Seleciona a peça sugerida para o jogador ver
                             selecionado = move.from_square
                             tocar_som_acao(engine.board, move, sound_manager, acao='hint')
                             dica_str = f"Dica: {chess.square_name(move.from_square)} → {chess.square_name(move.to_square)}"
                             ultima_dica_ia = dica_str
                         else:
                             ultima_dica_ia = "Dica: Nenhum lance encontrado."
+                    # 4. TOGGLE SOM (S)
+                    elif event.key == pygame.K_s:
+                        sound_manager.enabled = not sound_manager.enabled
+                        print(f"Som {'Ativado' if sound_manager.enabled else 'Desativado'}")
                     # Atalho para testar fim de jogo (ESPAÇO)
                     elif event.key == pygame.K_SPACE:
                         engine.stop()
-                        pontuacao_final = 1000 # Teste
+                        pontuacao_final = 1000
                         estado_atual = ESTADO_INPUT_NOME
                 # --- FIM DOS ATALHOS ---
 
@@ -250,8 +269,13 @@ def main():
                 if (engine.board.turn == (chess.WHITE if jogador_brancas else chess.BLACK)):
                     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                         mouse_x, mouse_y = event.pos
-                        col = mouse_x // display_board.sq_size
-                        row = 7 - (mouse_y // display_board.sq_size)
+                        # Corrige cálculo de linha/coluna se tabuleiro estiver flipado
+                        if display_board.is_flipped:
+                            col = 7 - (mouse_x // display_board.sq_size)
+                            row = mouse_y // display_board.sq_size
+                        else:
+                            col = mouse_x // display_board.sq_size
+                            row = 7 - (mouse_y // display_board.sq_size)
                         square = chess.square(col, row)
 
                         if selecionado is None:
@@ -286,7 +310,19 @@ def main():
                 engine.stop()
                 tempo_decorrido = engine.get_game_duration()
                 vencedor_cor = engine.get_winner()
-                venceu = (vencedor_cor == ('white' if jogador_brancas else 'black'))
+                # Lógica para definir se o JOGADOR venceu, perdeu ou empatou
+                cor_jogador = 'white' if jogador_brancas else 'black'
+                resultado_stats = 'draw'
+                if vencedor_cor == 'draw':
+                    resultado_stats = 'draw'
+                elif vencedor_cor == cor_jogador:
+                    resultado_stats = 'win'
+                else:
+                    resultado_stats = 'loss'
+                # --- NOVO: Atualiza Estatísticas ---
+                score_manager.update_stats(resultado_stats)
+                # -----------------------------------
+                venceu = (resultado_stats == 'win')
 
                 material = calcular_material(engine.board, jogador_brancas)
                 pontuacao_final = score_manager.calcular_pontuacao(venceu, material, tempo_decorrido)
@@ -326,6 +362,33 @@ def main():
             pygame.draw.rect(screen, (120, 80, 60), btn_pont, border_radius=12)
             opt2 = fonte2.render("Pontuações", True, (255, 255, 255))
             screen.blit(opt2, (btn_pont.x + 60, btn_pont.y + 10))
+
+            # --- NOVO: Desenhar Estatísticas no Menu ---
+            stats = score_manager.load_stats()
+            win_rate = score_manager.get_win_rate()
+            # Caixa de fundo no rodapé
+            rect_stats = pygame.Rect(200, 450, 440, 100)
+            pygame.draw.rect(screen, (50, 50, 50), rect_stats, border_radius=10)
+            pygame.draw.rect(screen, (100, 100, 100), rect_stats, 2, border_radius=10)
+            fonte_stats = pygame.font.SysFont("consolas", 18)
+            fonte_big = pygame.font.SysFont("arial", 30, bold=True)
+            # Textos
+            txt_total = fonte_stats.render(f"Jogos: {stats['games_played']}", True, (200, 200, 200))
+            txt_win   = fonte_stats.render(f"V: {stats['wins']}", True, (100, 255, 100)) # Verde
+            txt_loss  = fonte_stats.render(f"D: {stats['losses']}", True, (255, 100, 100)) # Vermelho
+            txt_draw  = fonte_stats.render(f"E: {stats['draws']}", True, (100, 100, 255)) # Azul
+            # Porcentagem em destaque
+            cor_rate = (255, 215, 0) if win_rate > 50 else (200, 200, 200)
+            txt_rate  = fonte_big.render(f"{win_rate:.1f}%", True, cor_rate)
+            lbl_rate  = fonte_stats.render("Aproveitamento", True, (150, 150, 150))
+            # Posicionamento
+            screen.blit(txt_total, (220, 460))
+            screen.blit(txt_win,   (220, 490))
+            screen.blit(txt_loss,  (300, 490))
+            screen.blit(txt_draw,  (380, 490))
+            # Lado direito da caixa (Aproveitamento)
+            screen.blit(txt_rate, (500, 465))
+            screen.blit(lbl_rate, (480, 500))
         elif estado_atual == ESTADO_ESCOLHA_COR:
             # Título
             fonte = pygame.font.SysFont("arial", 32)
@@ -368,8 +431,17 @@ def main():
             display_board.draw(engine.board)
             # Destaque opcional para peça selecionada
             if selecionado is not None:
-                x = chess.square_file(selecionado) * 80
-                y = (7 - chess.square_rank(selecionado)) * 80
+                col = chess.square_file(selecionado)
+                row = 7 - chess.square_rank(selecionado)
+                # Corrige para flip do tabuleiro
+                if display_board.is_flipped:
+                    draw_col = 7 - col
+                    draw_row = 7 - row
+                else:
+                    draw_col = col
+                    draw_row = row
+                x = draw_col * 80
+                y = draw_row * 80
                 s = pygame.Surface((80, 80))
                 s.set_alpha(100)
                 s.fill((255, 255, 0)) # Amarelo transparente
@@ -444,16 +516,22 @@ def main():
 
                 # --- LEGENDA DE ATALHOS ---
                 fonte_mini = pygame.font.SysFont("arial", 14)
+                status_som = "ON" if sound_manager.enabled else "OFF"
+                cor_som = (100, 255, 100) if sound_manager.enabled else (255, 100, 100)
                 texto_ajuda = [
                     "H - Dica",
                     "Ctrl+Z - Desfazer",
                     "F2 - Reiniciar",
-                    "M - Menu"
+                    "M - Menu",
+                    f"S - Som: {status_som}"
                 ]
-                y_ajuda = 640 - 100 # Posição Y no final da tela
+                y_ajuda = 640 - 100
                 pygame.draw.line(screen, (100,100,100), (panel_x + 10, y_ajuda - 10), (panel_x + 190, y_ajuda - 10))
                 for linha in texto_ajuda:
-                    txt = fonte_mini.render(linha, True, (180, 180, 180))
+                    if "Som:" in linha:
+                        txt = fonte_mini.render(linha, True, cor_som)
+                    else:
+                        txt = fonte_mini.render(linha, True, (180, 180, 180))
                     screen.blit(txt, (panel_x + 20, y_ajuda))
                     y_ajuda += 20
 

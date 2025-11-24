@@ -4,6 +4,43 @@ import os
 from typing import List, Dict
 
 class ScoreManager:
+	def _get_stats_path(self):
+		# Cria o caminho para stats.json na mesma pasta do scores.json
+		return os.path.join(os.path.dirname(self.scores_path), 'stats.json')
+
+	def load_stats(self):
+		"""Carrega estatísticas globais: vitórias, derrotas, empates."""
+		stats_path = self._get_stats_path()
+		if not os.path.exists(stats_path):
+			return {"wins": 0, "losses": 0, "draws": 0, "games_played": 0}
+		try:
+			with open(stats_path, 'r', encoding='utf-8') as f:
+				return json.load(f)
+		except:
+			return {"wins": 0, "losses": 0, "draws": 0, "games_played": 0}
+
+	def update_stats(self, result):
+		"""
+		result: 'win', 'loss', ou 'draw'
+		"""
+		stats = self.load_stats()
+		if result == 'win':
+			stats['wins'] += 1
+		elif result == 'loss':
+			stats['losses'] += 1
+		elif result == 'draw':
+			stats['draws'] += 1
+		stats['games_played'] += 1
+		# Salva
+		with open(self._get_stats_path(), 'w', encoding='utf-8') as f:
+			json.dump(stats, f, indent=4)
+
+	def get_win_rate(self):
+		stats = self.load_stats()
+		total = stats['games_played']
+		if total == 0:
+			return 0.0
+		return (stats['wins'] / total) * 100
 	def __init__(self, scores_path=None):
 		if scores_path is None:
 			base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

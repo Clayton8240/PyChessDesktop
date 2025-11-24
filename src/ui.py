@@ -122,7 +122,14 @@ class DisplayBoard:
 			if move.from_square == selected_square:
 				dest_col = chess.square_file(move.to_square)
 				dest_row = 7 - chess.square_rank(move.to_square)
-				self.screen.blit(surface, (dest_col * self.sq_size, dest_row * self.sq_size))
+				# Corrige para flip do tabuleiro
+				if self.is_flipped:
+					draw_col = 7 - dest_col
+					draw_row = 7 - dest_row
+				else:
+					draw_col = dest_col
+					draw_row = dest_row
+				self.screen.blit(surface, (draw_col * self.sq_size, draw_row * self.sq_size))
 	def __init__(self, screen, tamanho_quadrado=80):
 		self.screen = screen
 		self.sq_size = tamanho_quadrado
@@ -130,6 +137,10 @@ class DisplayBoard:
 		self._carregar_imagens()
 		self.active_animation = None
 		self.animating_dest_square = None
+		self.is_flipped = False
+
+	def set_flip(self, flip):
+		self.is_flipped = flip
 	def animate_move(self, move, board):
 		piece = board.piece_at(move.from_square)
 		if not piece:
@@ -137,12 +148,29 @@ class DisplayBoard:
 		img = self.images.get((piece.piece_type, piece.color))
 		if not img:
 			return
-		start_col = chess.square_file(move.from_square)
-		start_row = 7 - chess.square_rank(move.from_square)
+
+		# 1. Calcula coordenadas lógicas (Padrão: Brancas embaixo)
+		col_from = chess.square_file(move.from_square)
+		row_from = 7 - chess.square_rank(move.from_square)
+		col_to = chess.square_file(move.to_square)
+		row_to = 7 - chess.square_rank(move.to_square)
+
+		# 2. Aplica o Flip se necessário (Inverte espelhado)
+		if self.is_flipped:
+			start_col = 7 - col_from
+			start_row = 7 - row_from
+			end_col = 7 - col_to
+			end_row = 7 - row_to
+		else:
+			start_col = col_from
+			start_row = row_from
+			end_col = col_to
+			end_row = row_to
+
+		# 3. Converte para Pixels
 		start_pos = (start_col * self.sq_size, start_row * self.sq_size)
-		end_col = chess.square_file(move.to_square)
-		end_row = 7 - chess.square_rank(move.to_square)
 		end_pos = (end_col * self.sq_size, end_row * self.sq_size)
+
 		self.active_animation = PieceAnimation(start_pos, end_pos, img)
 		self.animating_dest_square = move.to_square
 
@@ -172,8 +200,11 @@ class DisplayBoard:
 		# 1. Desenha o Grid
 		for r in range(8):
 			for c in range(8):
+				# Lógica para flipar o tabuleiro
+				draw_c = 7 - c if self.is_flipped else c
+				draw_r = 7 - r if self.is_flipped else r
 				color = WOOD_LIGHT if (r + c) % 2 == 0 else WOOD_DARK
-				rect = pygame.Rect(c * self.sq_size, r * self.sq_size, self.sq_size, self.sq_size)
+				rect = pygame.Rect(draw_c * self.sq_size, draw_r * self.sq_size, self.sq_size, self.sq_size)
 				pygame.draw.rect(self.screen, color, rect)
 
 		# 2. Desenha as Peças
@@ -185,9 +216,12 @@ class DisplayBoard:
 			if piece:
 				col = chess.square_file(square)
 				row = 7 - chess.square_rank(square)
+				# Flip visual
+				draw_col = 7 - col if self.is_flipped else col
+				draw_row = 7 - row if self.is_flipped else row
 				img = self.images.get((piece.piece_type, piece.color))
 				if img:
-					self.screen.blit(img, (col * self.sq_size, row * self.sq_size))
+					self.screen.blit(img, (draw_col * self.sq_size, draw_row * self.sq_size))
 
 		# 3. Desenha a Peça Animada por cima de tudo
 		if self.active_animation:
