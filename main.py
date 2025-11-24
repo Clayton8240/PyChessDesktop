@@ -5,7 +5,7 @@ from src.config import *
 from src.ui import TextInput, LeaderboardView, DisplayBoard
 from src.engine import Engine
 from src.scoring import ScoreManager
-from src.ai import movimento_aleatorio
+from src.ai import get_best_move
 from src.sound import SoundManager
 
 # Função auxiliar para calcular material (insira aqui ou no engine.py)
@@ -97,7 +97,11 @@ def main():
     pontuacao_final = 0
     tempo_decorrido = 0
     jogador_brancas = True  # True = jogador é brancas, False = jogador é pretas
+    dificuldade = 2 # Começa no Médio por padrão
     
+    # Variável para armazenar a última dica da IA
+    ultima_dica_ia = None
+
     while True:
         dt = clock.tick(60)
         eventos = pygame.event.get()
@@ -144,11 +148,35 @@ def main():
                         tocar_som_acao(engine.board, None, sound_manager, acao='menu')
                         estado_atual = ESTADO_JOGANDO
                         if engine.board.turn == chess.WHITE:
-                            move = movimento_aleatorio(engine.board)
+                            move = get_best_move(engine.board, dificuldade)
                             if move:
                                 engine.board.push(move)
-                                sound_manager.play('move')
+                                tocar_som_acao(engine.board, move, sound_manager, acao='move')
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    # Botões de dificuldade (4 níveis)
+                    w_btn = 90
+                    gap = 10
+                    start_x = 220
+                    r_facil = pygame.Rect(start_x, 150, w_btn, 40)
+                    r_medio = pygame.Rect(start_x + w_btn + gap, 150, w_btn, 40)
+                    r_dificil = pygame.Rect(start_x + (w_btn + gap)*2, 150, w_btn, 40)
+                    r_pro = pygame.Rect(start_x + (w_btn + gap)*3, 150, w_btn, 40)
+                    if r_facil.collidepoint(event.pos):
+                        dificuldade = 1
+                        sound_manager.play('move')
+                    elif r_medio.collidepoint(event.pos):
+                        dificuldade = 2
+                        sound_manager.play('move')
+                    elif r_dificil.collidepoint(event.pos):
+                        dificuldade = 3
+                        sound_manager.play('move')
+                    elif r_pro.collidepoint(event.pos):
+                        dificuldade = 4
+                        sound_manager.play('move')
+                    # Botões de cor
+                    # Corrige posição dos botões para garantir clique correto
+                    btn_brancas.y = 300
+                    btn_pretas.y = 300
                     if btn_brancas.collidepoint(event.pos):
                         jogador_brancas = True
                         engine.start()
@@ -164,7 +192,7 @@ def main():
                         tocar_som_acao(engine.board, None, sound_manager, acao='menu')
                         estado_atual = ESTADO_JOGANDO
                         if engine.board.turn == chess.WHITE:
-                            move = movimento_aleatorio(engine.board)
+                            move = get_best_move(engine.board, dificuldade)
                             if move:
                                 engine.board.push(move)
                                 tocar_som_acao(engine.board, move, sound_manager, acao='move')
@@ -202,12 +230,15 @@ def main():
                     # 3. AJUDA / DICA (H)
                     elif event.key == pygame.K_h:
                         # Pede para a IA calcular um movimento para VOCÊ (cor atual)
-                        move = movimento_aleatorio(engine.board)
+                        move = get_best_move(engine.board, dificuldade)
                         if move:
                             # Efeito visual: Seleciona a peça sugerida para o jogador ver
                             selecionado = move.from_square
                             tocar_som_acao(engine.board, move, sound_manager, acao='hint')
-                            print(f"Dica da IA: Mover de {chess.square_name(move.from_square)} para {chess.square_name(move.to_square)}")
+                            dica_str = f"Dica: {chess.square_name(move.from_square)} → {chess.square_name(move.to_square)}"
+                            ultima_dica_ia = dica_str
+                        else:
+                            ultima_dica_ia = "Dica: Nenhum lance encontrado."
                     # Atalho para testar fim de jogo (ESPAÇO)
                     elif event.key == pygame.K_SPACE:
                         engine.stop()
@@ -273,7 +304,7 @@ def main():
                     estado_atual = ESTADO_RANKING
             # IA Joga (cor oposta ao jogador)
             elif aguardando_ia:
-                move = movimento_aleatorio(engine.board)
+                move = get_best_move(engine.board, dificuldade)
                 if move:
                     realizar_jogada(engine, move, display_board, sound_manager)
                 aguardando_ia = False
@@ -296,16 +327,39 @@ def main():
             opt2 = fonte2.render("Pontuações", True, (255, 255, 255))
             screen.blit(opt2, (btn_pont.x + 60, btn_pont.y + 10))
         elif estado_atual == ESTADO_ESCOLHA_COR:
+            # Título
             fonte = pygame.font.SysFont("arial", 32)
             screen.fill((40, 40, 40))
-            msg = fonte.render("Escolha sua cor:", True, (255, 255, 255))
-            screen.blit(msg, (270, 170))
-            fonte2 = pygame.font.SysFont("arial", 28)
-            # Botão Brancas
+            # --- DIFICULDADE ---
+            fonte_peq = pygame.font.SysFont("arial", 24)
+            lbl_dif = fonte.render("Dificuldade:", True, (255,255,255))
+            screen.blit(lbl_dif, (200, 100))
+            # Botões de Dificuldade (agora 4 níveis)
+            colors_dif = [(100,100,100), (100,100,100), (100,100,100), (100,100,100)]
+            if 1 <= dificuldade <= 4:
+                colors_dif[dificuldade-1] = (0, 200, 0)
+            w_btn = 90
+            gap = 10
+            start_x = 220
+            btn_facil = pygame.Rect(start_x, 150, w_btn, 40)
+            btn_medio = pygame.Rect(start_x + w_btn + gap, 150, w_btn, 40)
+            btn_dificil = pygame.Rect(start_x + (w_btn + gap)*2, 150, w_btn, 40)
+            btn_pro = pygame.Rect(start_x + (w_btn + gap)*3, 150, w_btn, 40)
+            botoes = [btn_facil, btn_medio, btn_dificil, btn_pro]
+            textos = ["Fácil", "Médio", "Difícil", "Pro"]
+            for i, (btn, txt) in enumerate(zip(botoes, textos)):
+                pygame.draw.rect(screen, colors_dif[i], btn, border_radius=5)
+                font_btn = pygame.font.SysFont("arial", 20)
+                lbl = font_btn.render(txt, True, (255,255,255))
+                screen.blit(lbl, (btn.x + (btn.width - lbl.get_width())//2, btn.y + 8))
+            # --- COR ---
+            lbl_cor = fonte.render("Escolha sua cor:", True, (255,255,255))
+            screen.blit(lbl_cor, (270, 250))
+            btn_brancas.y = 300
+            btn_pretas.y = 300
             pygame.draw.rect(screen, (220, 220, 220), btn_brancas, border_radius=12)
             txt_b = fonte2.render("Brancas", True, (60, 60, 60))
             screen.blit(txt_b, (btn_brancas.x + 40, btn_brancas.y + 10))
-            # Botão Pretas
             pygame.draw.rect(screen, (40, 40, 40), btn_pretas, border_radius=12)
             pygame.draw.rect(screen, (200, 200, 200), btn_pretas, 2, border_radius=12)
             txt_p = fonte2.render("Pretas", True, (220, 220, 220))
@@ -378,6 +432,16 @@ def main():
                             for i in range(count):
                                 screen.blit(img_small, (panel_x+20+i*img_size, img_y))
 
+
+                # --- DICA DA IA ---
+                # Posiciona logo abaixo dos cemitérios, aproveitando o espaço vazio
+                dica_y = img_y + img_size + 30
+                if ultima_dica_ia:
+                    fonte_dica = pygame.font.SysFont("arial", 18, bold=True)
+                    cor_dica = (34, 180, 90)  # Verde agradável
+                    dica_txt = fonte_dica.render(ultima_dica_ia, True, cor_dica)
+                    screen.blit(dica_txt, (panel_x + 20, dica_y))
+
                 # --- LEGENDA DE ATALHOS ---
                 fonte_mini = pygame.font.SysFont("arial", 14)
                 texto_ajuda = [
@@ -416,6 +480,12 @@ def main():
             # Lógica simples de voltar ao menu
             keys = pygame.key.get_pressed()
             if keys[pygame.K_m]:
+                engine.start()
+                estado_atual = ESTADO_MENU
+
+        # Atalho M para menu em qualquer estado (exceto já no menu)
+        for event in eventos:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_m and estado_atual != ESTADO_MENU:
                 engine.start()
                 estado_atual = ESTADO_MENU
 
