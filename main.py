@@ -93,6 +93,10 @@ def main():
     tempo_escolhido = 600
     ultima_dica_ia = None
 
+    # --- Notificações ---
+    aviso_texto = ""
+    aviso_timer = 0
+
     # Promoção
     promocao_pendente = False
     move_promocao_pendente = None
@@ -344,6 +348,12 @@ def main():
                         if (pygame.key.get_mods() & pygame.KMOD_CTRL): # Ctrl+S = Salvar
                             result = engine.board.result()
                             nome = pgn_manager.save_game(engine.board, "Brancas" if jogador_brancas else "IA", "IA" if jogador_brancas else "Pretas", result)
+                            
+                            # --- CÓDIGO NOVO ---
+                            aviso_texto = "Partida Salva com Sucesso!"
+                            aviso_timer = pygame.time.get_ticks() + 2500 # Mostra por 2.5 segundos
+                            # -------------------
+                            
                             print(f"Salvo: {nome}")
                             sound_manager.play('menu')
                         else: # S = Som
@@ -603,6 +613,31 @@ def main():
             pygame.draw.rect(screen, (200, 200, 200), (670, 400, 160, 50), border_radius=5)
             screen.blit(fonte_btn.render(fmt(engine.white_time), True, (0,0,0)), (700, 410))
             
+            # --- CÓDIGO NOVO: LEGENDA DE ATALHOS ---
+            y_legenda = 500
+            fonte_legenda = pygame.font.SysFont("arial", 14)
+            
+            # Verifica cor do som dinamicamente
+            status_som = "ON" if sound_manager.enabled else "OFF"
+            cor_som = (100, 255, 100) if sound_manager.enabled else (255, 100, 100)
+
+            atalhos = [
+                ("H - Dica da IA", (180, 180, 180)),
+                ("Ctrl+Z - Desfazer", (180, 180, 180)),
+                ("Ctrl+S - Salvar PGN", (180, 180, 180)),
+                ("M - Menu Principal", (180, 180, 180)),
+                (f"S - Som: {status_som}", cor_som)
+            ]
+
+            # Linha divisória sutil
+            pygame.draw.line(screen, (100, 100, 100), (670, 480), (830, 480), 1)
+
+            for texto, cor in atalhos:
+                surf = fonte_legenda.render(texto, True, cor)
+                screen.blit(surf, (670, y_legenda))
+                y_legenda += 22 # Espaçamento entre linhas
+            # ---------------------------------------
+
             # Dica e Menu Promoção
             if ultima_dica_ia:
                 screen.blit(fonte_small.render("Dica IA:", True, (100,255,100)), (670, 200))
@@ -631,6 +666,31 @@ def main():
             msg = fonte_btn.render(f"Recorde! Pontos: {pontuacao_final}", True, (255,255,255))
             screen.blit(msg, (200, 200))
             input_nome.draw(screen)
+
+        # --- RENDERIZAÇÃO DE AVISOS (TOAST) ---
+        if aviso_texto and pygame.time.get_ticks() < aviso_timer:
+            # Cria uma superfície para o fundo (para poder usar transparência/alpha)
+            largura_box = 400
+            altura_box = 60
+            s = pygame.Surface((largura_box, altura_box))
+            s.set_alpha(220) # 0-255 (Transparência)
+            s.fill((30, 30, 30)) # Fundo escuro
+            
+            # Posiciona no centro superior da tela
+            x_pos = 840 // 2 - largura_box // 2
+            y_pos = 100
+            
+            screen.blit(s, (x_pos, y_pos))
+            
+            # Borda Verde Elegante
+            pygame.draw.rect(screen, (50, 200, 100), (x_pos, y_pos, largura_box, altura_box), 2, border_radius=5)
+            
+            # Ícone ou Símbolo (Opcional, usando texto simples aqui)
+            txt_surf = fonte_btn.render(aviso_texto, True, (255, 255, 255))
+            screen.blit(txt_surf, (x_pos + (largura_box - txt_surf.get_width()) // 2, y_pos + (altura_box - txt_surf.get_height()) // 2))
+            
+        elif pygame.time.get_ticks() >= aviso_timer:
+            aviso_texto = "" # Limpa a memória quando o tempo acaba
 
         pygame.display.flip()
 
