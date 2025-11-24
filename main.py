@@ -121,7 +121,38 @@ def main():
 
             # --- Lógica do Jogo ---
             elif estado_atual == ESTADO_JOGANDO and not aguardando_ia:
-                # Só permite jogada do jogador se for a vez da sua cor
+                # --- NOVOS ATALHOS DE TECLADO ---
+                if event.type == pygame.KEYDOWN:
+                    # 1. DESFAZER (Ctrl + Z)
+                    if event.key == pygame.K_z and (pygame.key.get_mods() & pygame.KMOD_CTRL):
+                        # Precisamos ter pelo menos 2 movimentos (1 seu, 1 da IA) para desfazer o par
+                        if len(engine.board.move_stack) >= 2:
+                            engine.board.pop() # Desfaz jogada da IA
+                            engine.board.pop() # Desfaz sua jogada
+                            selecionado = None # Limpa seleção
+                            # sound_manager.play('move') # Feedback sonoro (opcional)
+                    # 2. NOVO JOGO (F2)
+                    elif event.key == pygame.K_F2:
+                        engine.start() # Reseta tabuleiro e tempo
+                        selecionado = None
+                        aguardando_ia = False
+                        estado_atual = ESTADO_ESCOLHA_COR # Volta para escolher cor
+                    # 3. AJUDA / DICA (H)
+                    elif event.key == pygame.K_h:
+                        # Pede para a IA calcular um movimento para VOCÊ (cor atual)
+                        move = movimento_aleatorio(engine.board)
+                        if move:
+                            # Efeito visual: Seleciona a peça sugerida para o jogador ver
+                            selecionado = move.from_square
+                            print(f"Dica da IA: Mover de {chess.square_name(move.from_square)} para {chess.square_name(move.to_square)}")
+                    # Atalho para testar fim de jogo (ESPAÇO)
+                    elif event.key == pygame.K_SPACE:
+                        engine.stop()
+                        pontuacao_final = 1000 # Teste
+                        estado_atual = ESTADO_INPUT_NOME
+                # --- FIM DOS ATALHOS ---
+
+                # Só permite jogada do jogador se for a vez da sua cor (Código antigo continua aqui...)
                 if (engine.board.turn == (chess.WHITE if jogador_brancas else chess.BLACK)):
                     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                         mouse_x, mouse_y = event.pos
@@ -152,12 +183,6 @@ def main():
                                     selecionado = square
                                 else:
                                     selecionado = None
-
-                    # Atalho para testar fim de jogo (ESPAÇO)
-                    if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                        engine.stop()
-                        pontuacao_final = 1000 # Teste
-                        estado_atual = ESTADO_INPUT_NOME
 
         # --- Atualizações de Lógica (IA e Estado) ---
         if estado_atual == ESTADO_JOGANDO:
@@ -282,6 +307,21 @@ def main():
                             img_small = pygame.transform.scale(img, (img_size, img_size))
                             for i in range(count):
                                 screen.blit(img_small, (panel_x+20+i*img_size, img_y))
+
+                # --- LEGENDA DE ATALHOS ---
+                fonte_mini = pygame.font.SysFont("arial", 14)
+                texto_ajuda = [
+                    "H - Dica",
+                    "Ctrl+Z - Desfazer",
+                    "F2 - Reiniciar",
+                    "M - Menu"
+                ]
+                y_ajuda = 640 - 100 # Posição Y no final da tela
+                pygame.draw.line(screen, (100,100,100), (panel_x + 10, y_ajuda - 10), (panel_x + 190, y_ajuda - 10))
+                for linha in texto_ajuda:
+                    txt = fonte_mini.render(linha, True, (180, 180, 180))
+                    screen.blit(txt, (panel_x + 20, y_ajuda))
+                    y_ajuda += 20
 
             draw_side_panel()
 
