@@ -786,5 +786,824 @@
     "moves": ["h4d8"],
     "description": "Mate em 1",
     "rating": 700
-  }
+  },
+
+  {
+    "id": "101",
+    "fen": "r1bq1rk1/pp1n1ppp/2p1pn2/3p4/3P4/2N1PN2/PP3PPP/R1BQR1K1 w - - 0 11",
+    "moves": ["c3e4"],
+    "description": "Garfo de cavalo — ganhe peça",
+    "rating": 900
+  },
+  {
+    "id": "102",
+    "fen": "r2q1rk1/ppp2ppp/2n2n2/3p4/3P4/2P1PN2/PP3PPP/R1BQR1K1 w - - 0 12",
+    "moves": ["e3e4"],
+    "description": "Cravada e exploração da coluna d",
+    "rating": 950
+  },
+  {
+    "id": "103",
+    "fen": "r1bqk2r/ppp2ppp/2n1pn2/3p4/3P4/2N1PN2/PPPQ1PPP/R3KB1R w KQkq - 0 9",
+    "moves": ["d2d3"],
+    "description": "Descoberta — liberação de bispo com ataque",
+    "rating": 850
+  },
+  {
+    "id": "104",
+    "fen": "r1bqkbnr/pppp1ppp/2n5/4p3/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq - 2 3",
+    "moves": ["d4e5"],
+    "description": "Ataque duplo central — capture com vantagem",
+    "rating": 800
+  },
+  {
+    "id": "105",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP3PPP/R1BQR1K1 w - - 0 12",
+    "moves": ["d1d3"],
+    "description": "Cravada ao rei — ganhe material",
+    "rating": 1000
+  },
+  {
+    "id": "106",
+    "fen": "r3r1k1/pp1n1ppp/2p1pn2/3p4/3P4/1PN1PN2/P4PPP/2RR2K1 w - - 0 14",
+    "moves": ["c3e4"],
+    "description": "Garfo: cavalo ataca rei e peça maior",
+    "rating": 1100
+  },
+  {
+    "id": "107",
+    "fen": "r1bq1rk1/1p3ppp/p1n1pn2/3p4/3P4/1PN1PN2/P4PPP/R1BQR1K1 w - - 2 13",
+    "moves": ["a3b5"],
+    "description": "Ataque ao bispo via salto — ganhe peça",
+    "rating": 1150
+  },
+  {
+    "id": "108",
+    "fen": "r1bqk2r/pp1n1ppp/2p1pn2/3p4/3P4/2N1PN2/PP1Q1PPP/R3KB1R w KQkq - 0 9",
+    "moves": ["d2d3"],
+    "description": "Tática de descoberta central",
+    "rating": 900
+  },
+  {
+    "id": "109",
+    "fen": "r1bq1rk1/pp2bppp/2n2n2/2pp4/3P4/2P1PN2/PP1NBPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["d4c5"],
+    "description": "Raio-X: captura na coluna c",
+    "rating": 1050
+  },
+  {
+    "id": "110",
+    "fen": "r4rk1/pp1q1ppp/2n1pn2/3p4/3P4/2N1PN2/PPQ2PPP/R1B2RK1 w - - 0 13",
+    "moves": ["c2h7"],
+    "description": "Ataque direto com dama — mate ou ganho de peça",
+    "rating": 1200
+  },
+  {
+    "id": "111",
+    "fen": "r1bq1rk1/pp3ppp/2n1pn2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 11",
+    "moves": ["d1d3"],
+    "description": "Cravada e pressão na diagonal",
+    "rating": 1000
+  },
+  {
+    "id": "112",
+    "fen": "r1bq1rk1/pp1n1ppp/2p1pn2/3p4/3P4/2N1PN2/PPQ2PPP/R1B2RK1 w - - 0 11",
+    "moves": ["c2b1"],
+    "description": "Reorganize e use garfo subsequente",
+    "rating": 1050
+  },
+  {
+    "id": "113",
+    "fen": "r3r1k1/pp1qnppp/2n1pn2/3p4/3P4/2P1PN2/PP3PPP/2RQ1RK1 w - - 0 14",
+    "moves": ["c3d5"],
+    "description": "Cavalo em d5 cria dupla ameaça",
+    "rating": 1150
+  },
+  {
+    "id": "114",
+    "fen": "r1bq1rk1/pp1n1ppp/2p1pn2/3p4/3P4/2N1PN2/PP3PPP/R1BQ1RK1 w - - 0 11",
+    "moves": ["c3e4"],
+    "description": "Garfo de cavalo — torre e peça atacadas",
+    "rating": 1000
+  },
+  {
+    "id": "115",
+    "fen": "r1bqk2r/ppp2ppp/2n1bn2/3p4/3P4/2N1PN2/PPP2PPP/R1BQKB1R w KQkq - 0 6",
+    "moves": ["e3e4"],
+    "description": "Desvio: peça adversária perde proteção",
+    "rating": 900
+  },
+  {
+    "id": "116",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 11",
+    "moves": ["d4d5"],
+    "description": "Ataque de avanço — liberta peças e cria tática",
+    "rating": 1000
+  },
+  {
+    "id": "117",
+    "fen": "r2q1rk1/pp1n1ppp/2p1pn2/3p4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 11",
+    "moves": ["e3e4"],
+    "description": "Troque peões para criar cravada",
+    "rating": 950
+  },
+  {
+    "id": "118",
+    "fen": "r1bq1rk1/pp3ppp/2n1pn2/2bp4/3P4/2N1PN2/PPQ2PPP/R1B2RK1 w - - 0 11",
+    "moves": ["c2d3"],
+    "description": "Cravada na coluna c — ganhe material",
+    "rating": 1050
+  },
+  {
+    "id": "119",
+    "fen": "r1bqk2r/ppp2ppp/2n1bn2/3p4/3P4/2N1PN2/PPP2PPP/R1BQKB1R w KQkq - 0 6",
+    "moves": ["b1a3"],
+    "description": "Recolocação de cavalo com garfo em vista",
+    "rating": 900
+  },
+  {
+    "id": "120",
+    "fen": "r1bq1rk1/ppp2ppp/2n2n2/3p4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 10",
+    "moves": ["e3e4"],
+    "description": "Desencadeia descoberta e ataque ao rei",
+    "rating": 980
+  },
+  {
+    "id": "121",
+    "fen": "r4rk1/pp2bppp/2n2n2/2pp4/3P4/2P1PN2/PP3PPP/2R2RK1 w - - 0 13",
+    "moves": ["c3d4"],
+    "description": "Intervenção e ataque duplo na diagonal",
+    "rating": 1100
+  },
+  {
+    "id": "122",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["d1d3"],
+    "description": "Ataque de pressão — ameaça dupla",
+    "rating": 1000
+  },
+  {
+    "id": "123",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP1B1PPP/R2Q1RK1 w - - 0 12",
+    "moves": ["d2e3"],
+    "description": "Cravada ao bispo que estava defendendo",
+    "rating": 1030
+  },
+  {
+    "id": "124",
+    "fen": "r1bq1rk1/ppp2ppp/2n1pn2/3p4/3P4/1PN1PN2/PP3PPP/R1BQ1RK1 w - - 0 11",
+    "moves": ["b3c5"],
+    "description": "Cavalo salta e cria dupla ameaça",
+    "rating": 1150
+  },
+  {
+    "id": "125",
+    "fen": "r1bq1rk1/pp2bppp/2n2n2/2pp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 11",
+    "moves": ["d4c5"],
+    "description": "Captura por tempo: ganho de peão e abertura de coluna",
+    "rating": 1000
+  },
+  {
+    "id": "126",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 11",
+    "moves": ["b2b4"],
+    "description": "Deslocamento de peão que cria tática",
+    "rating": 980
+  },
+  {
+    "id": "127",
+    "fen": "r1bq1rk1/pp1n1ppp/2p1pn2/3p4/3P4/2N1PN2/PP2BPPP/R1BQR1K1 w - - 0 11",
+    "moves": ["e3e4"],
+    "description": "Ataque central — descoberta por bispo",
+    "rating": 990
+  },
+  {
+    "id": "128",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP1B1PPP/R2Q1RK1 w - - 0 12",
+    "moves": ["d4dxc5"],
+    "description": "Explorar cravada e ganhar material",
+    "rating": 1050
+  },
+  {
+    "id": "129",
+    "fen": "r2q1rk1/pp2bppp/2n2n2/2pp4/3P4/2P1PN2/PP3PPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["d4c5"],
+    "description": "Raio-X e ataque à coluna c",
+    "rating": 1080
+  },
+  {
+    "id": "130",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PPQ2PPP/R1B2RK1 w - - 0 11",
+    "moves": ["c2b1"],
+    "description": "Reorientar dama para criar o garfo",
+    "rating": 1120
+  },
+  {
+    "id": "131",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["c3e4"],
+    "description": "Garfo: cavalo ataca duas peças maiores",
+    "rating": 1100
+  },
+  {
+    "id": "132",
+    "fen": "r4rk1/pp1n1ppp/2p1pn2/3p4/3P4/1PN1PN2/P4PPP/2RR2K1 w - - 0 14",
+    "moves": ["e3e4"],
+    "description": "Forçar troca e criar tática",
+    "rating": 1070
+  },
+  {
+    "id": "133",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["b1a3"],
+    "description": "Cavalo saltando para b5/a4 cria cravada",
+    "rating": 1030
+  },
+  {
+    "id": "134",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP1B1PPP/R2Q1RK1 w - - 0 12",
+    "moves": ["d3e4"],
+    "description": "Descoberta — bispo e dama atacam",
+    "rating": 1110
+  },
+  {
+    "id": "135",
+    "fen": "r1bq1rk1/ppp2ppp/2n1bn2/3p4/3P4/2N1PN2/PPP2PPP/R1BQKB1R w KQkq - 0 6",
+    "moves": ["e3e4"],
+    "description": "Ataque tático: peça para frente e cravada",
+    "rating": 920
+  },
+  {
+    "id": "136",
+    "fen": "r1bq1rk1/pp3ppp/1bn2n2/3p4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["a3b5"],
+    "description": "Captura tática — pressione a estrutura inimiga",
+    "rating": 1120
+  },
+  {
+    "id": "137",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["d4d5"],
+    "description": "Avanço que abre diagonal tática",
+    "rating": 980
+  },
+  {
+    "id": "138",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/1PN1PN2/P4PPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["b3c5"],
+    "description": "Cavalo para c5 cria dupla ameaça",
+    "rating": 1180
+  },
+  {
+    "id": "139",
+    "fen": "r1bq1rk1/pp2bppp/2n2n2/2pp4/3P4/2P1PN2/PP3PPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["c3b5"],
+    "description": "Ataque lateral e garfo iminente",
+    "rating": 1130
+  },
+  {
+    "id": "140",
+    "fen": "r1bq1rk1/pp1n1ppp/2p1pn2/3p4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 11",
+    "moves": ["b2b4"],
+    "description": "Avanço com intenção tática",
+    "rating": 990
+  },
+  {
+    "id": "141",
+    "fen": "rnbq1rk1/ppp2ppp/4pn2/3p4/3P4/2N1PN2/PP3PPP/R1BQ1RK1 w - - 0 9",
+    "moves": ["c3e4"],
+    "description": "Garfo contra dama e peça menor",
+    "rating": 1070
+  },
+  {
+    "id": "142",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["e3e4"],
+    "description": "Sacrifício para abrir rei e ganhar peça",
+    "rating": 1250
+  },
+  {
+    "id": "143",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["d4d5"],
+    "description": "Empurre d5: crie fraqueza e tática",
+    "rating": 1010
+  },
+  {
+    "id": "144",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["c3e4"],
+    "description": "Garfo — cavalo ganha duas peças",
+    "rating": 1090
+  },
+  {
+    "id": "145",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["b3c5"],
+    "description": "Ataque à coluna a partir de b3",
+    "rating": 1120
+  },
+  {
+    "id": "146",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["d1d2"],
+    "description": "Reagrupamento para tática iminente",
+    "rating": 980
+  },
+  {
+    "id": "147",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["a3b5"],
+    "description": "Pressione a ala da dama e force tática",
+    "rating": 1050
+  },
+  {
+    "id": "148",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["e3e4"],
+    "description": "Cravada via e4 — descubra ataque",
+    "rating": 1020
+  },
+  {
+    "id": "149",
+    "fen": "r1bqk2r/ppp2ppp/2n1bn2/3p4/3P4/2N1PN2/PPP2PPP/R1BQKB1R w KQkq - 0 6",
+    "moves": ["g2g4"],
+    "description": "Ataque lateral ganhando espaço e tática",
+    "rating": 880
+  },
+  {
+    "id": "150",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["c4d5"],
+    "description": "Troca estratégica com ganho tático",
+    "rating": 1060
+  },
+  {
+    "id": "151",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["e4e5"],
+    "description": "Avanço que cria garfo e pressão",
+    "rating": 1080
+  },
+  {
+    "id": "152",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["b3a4"],
+    "description": "Recolocação visando garfo",
+    "rating": 980
+  },
+  {
+    "id": "153",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["d4c5"],
+    "description": "Explorar cravada: ganhar peão e abrir coluna",
+    "rating": 1110
+  },
+  {
+    "id": "154",
+    "fen": "rnbq1rk1/ppp2ppp/4pn2/3p4/3P4/2N1PN2/PP3PPP/R1BQ1RK1 w - - 0 9",
+    "moves": ["b2b3"],
+    "description": "Manobra prepara garfo no centro",
+    "rating": 970
+  },
+  {
+    "id": "155",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["e3e4"],
+    "description": "Sacrifício minúsculo que abre fileira",
+    "rating": 1230
+  },
+  {
+    "id": "156",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bP4/3p4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 13",
+    "moves": ["c1d2"],
+    "description": "Conduza dama/bispo para tática lucrativa",
+    "rating": 1150
+  },
+  {
+    "id": "157",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP1B1PPP/R2Q1RK1 w - - 0 12",
+    "moves": ["b3c5"],
+    "description": "Cavalo em c5 com ganho tático",
+    "rating": 1180
+  },
+  {
+    "id": "158",
+    "fen": "rnbq1rk1/ppp2ppp/4pn2/3p4/3P4/2N1PN2/PP3PPP/R1BQ1RK1 w - - 0 9",
+    "moves": ["c1d2"],
+    "description": "Redirecione bispo para cruzar tática",
+    "rating": 980
+  },
+  {
+    "id": "159",
+    "fen": "r1bq1rk1/ppp2ppp/2n1bn2/3p4/3P4/2N1PN2/PP3PPP/R1BQ1RK1 w - - 0 8",
+    "moves": ["e3e4"],
+    "description": "Forçar fraqueza com sacrifício",
+    "rating": 1210
+  },
+  {
+    "id": "160",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["d4d5"],
+    "description": "Avance para abrir linha e criar ataque duplo",
+    "rating": 1030
+  },
+  {
+    "id": "161",
+    "fen": "r2q1rk1/pp2bppp/2n2n2/2pp4/3P4/2P1PN2/PP3PPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["b2b4"],
+    "description": "Expansão que cria tática na ala",
+    "rating": 1000
+  },
+  {
+    "id": "162",
+    "fen": "r1bq1rk1/pp3ppp/2n1pn2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["c3e4"],
+    "description": "Garfo de cavalo típico",
+    "rating": 1100
+  },
+  {
+    "id": "163",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["e3e4"],
+    "description": "Entrada tática com abertura de fileira",
+    "rating": 1010
+  },
+  {
+    "id": "164",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["b2b3"],
+    "description": "Manobra que prepara o salto tático",
+    "rating": 950
+  },
+  {
+    "id": "165",
+    "fen": "r4rk1/pp2bppp/2n2n2/2pp4/3P4/2P1PN2/PP3PPP/2RQ1RK1 w - - 0 13",
+    "moves": ["d4c5"],
+    "description": "Captura ativa abrindo coluna para tática",
+    "rating": 1080
+  },
+  {
+    "id": "166",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["a2a4"],
+    "description": "Abertura de ala que cria tática",
+    "rating": 920
+  },
+  {
+    "id": "167",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/1Nbp4/3P4/4PN2/PP2BPPP/R1BQ1RK1 w - - 0 11",
+    "moves": ["b5c7"],
+    "description": "Cavalo salta e captura peça maior",
+    "rating": 1250
+  },
+  {
+    "id": "168",
+    "fen": "r1bq1rk1/pp2nppp/2n1p3/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["d4dxc5"],
+    "description": "Desvio e ganho de peça",
+    "rating": 1100
+  },
+  {
+    "id": "169",
+    "fen": "r1bq1rk1/pp3ppp/2n1pn2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["d4d5"],
+    "description": "Avanço com abertura e tática",
+    "rating": 1005
+  },
+  {
+    "id": "170",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["c3e4"],
+    "description": "Garfo clássico em meio-jogo",
+    "rating": 1120
+  },
+  {
+    "id": "171",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/2PP4/2N1PN2/PP3PPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["c4d5"],
+    "description": "Tática de captura com ganho de peão",
+    "rating": 990
+  },
+  {
+    "id": "172",
+    "fen": "r3r1k1/pp1n1ppp/2p1pn2/3p4/3P4/1PN1PN2/P4PPP/2RR2K1 w - - 0 14",
+    "moves": ["c3e4"],
+    "description": "Cavalo invade e cria dupla ameaça",
+    "rating": 1140
+  },
+  {
+    "id": "173",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/1PN1PN2/P4PPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["b3c5"],
+    "description": "Ataque por infiltração com cavalo",
+    "rating": 1110
+  },
+  {
+    "id": "174",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["a3b4"],
+    "description": "Preparação para garfo no centro",
+    "rating": 960
+  },
+  {
+    "id": "175",
+    "fen": "r1bqk2r/ppp2ppp/2n1bn2/3p4/3P4/2N1PN2/PPP2PPP/R1BQKB1R w KQkq - 0 6",
+    "moves": ["b2b3"],
+    "description": "Reforça casa e prepara tática",
+    "rating": 890
+  },
+  {
+    "id": "176",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["d4e5"],
+    "description": "Captura que cria forking após recapture",
+    "rating": 1160
+  },
+  {
+    "id": "177",
+    "fen": "r2q1rk1/pp1n1ppp/2p1pn2/3p4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 11",
+    "moves": ["c3e4"],
+    "description": "Salto tático com ganho material",
+    "rating": 1070
+  },
+  {
+    "id": "178",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["a3b4"],
+    "description": "Forçar troca e ganhar fraquezas",
+    "rating": 1010
+  },
+  {
+    "id": "179",
+    "fen": "r1bq1rk1/pp3ppp/2n1bn2/2pp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 11",
+    "moves": ["b3c4"],
+    "description": "Manobra para cravar peça inimiga",
+    "rating": 1000
+  },
+  {
+    "id": "180",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2pp4/3P4/1PN1PN2/P4PPP/2RR2K1 w - - 0 14",
+    "moves": ["c3d5"],
+    "description": "Cavalo em d5 com dupla ameaça",
+    "rating": 1190
+  },
+  {
+    "id": "181",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["e3e4"],
+    "description": "Inicie tática com avanço central",
+    "rating": 1020
+  },
+  {
+    "id": "182",
+    "fen": "r1bq1rk1/pp2nppp/2n1p3/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["d4dxc5"],
+    "description": "Desvio e captura ganhando peça",
+    "rating": 1130
+  },
+  {
+    "id": "183",
+    "fen": "r1bq1rk1/pp3ppp/2n1bn2/3p4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 11",
+    "moves": ["b2b4"],
+    "description": "Expansão lateral cria tática",
+    "rating": 1005
+  },
+  {
+    "id": "184",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["c3d5"],
+    "description": "Entrar em d5 com ganho tático",
+    "rating": 1170
+  },
+  {
+    "id": "185",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/1PN1PN2/P4PPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["b3c5"],
+    "description": "Cavalo em c5 — ataque duplo",
+    "rating": 1160
+  },
+  {
+    "id": "186",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["d4d5"],
+    "description": "Desloque peão para criar fraqueza e tática",
+    "rating": 1008
+  },
+  {
+    "id": "187",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["c3e4"],
+    "description": "Garfo finalizando ganho de material",
+    "rating": 1180
+  },
+  {
+    "id": "188",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/1PN1PN2/P4PPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["b3c5"],
+    "description": "Infiltração de cavalo com dupla ameaça",
+    "rating": 1140
+  },
+  {
+    "id": "189",
+    "fen": "r4rk1/pp1n1ppp/2p1pn2/3p4/3P4/2P1PN2/PP3PPP/2RQ1RK1 w - - 0 13",
+    "moves": ["c3e4"],
+    "description": "Cavalo ataca dama e peça maior",
+    "rating": 1110
+  },
+  {
+    "id": "190",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["e3e4"],
+    "description": "Sacrifício para abrir coluna e ganhar peça",
+    "rating": 1260
+  },
+  {
+    "id": "191",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["d4dxc5"],
+    "description": "Tática de cravada seguida de ganho",
+    "rating": 1105
+  },
+  {
+    "id": "192",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["c3d5"],
+    "description": "Salto de cavalo com ataque duplo",
+    "rating": 1195
+  },
+  {
+    "id": "193",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["b3c5"],
+    "description": "Invasão na casa c5 criadora de garfo",
+    "rating": 1165
+  },
+  {
+    "id": "194",
+    "fen": "r1bq1rk1/pp1n1ppp/2p1pn2/3p4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 11",
+    "moves": ["c3e4"],
+    "description": "Garfo decisivo no centro",
+    "rating": 1130
+  },
+  {
+    "id": "195",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["e3e4"],
+    "description": "Empurre e descubra ataque tático",
+    "rating": 1040
+  },
+  {
+    "id": "196",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/1PN1PN2/P4PPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["b3c5"],
+    "description": "Cavalo em c5 cria dupla ameaça imediata",
+    "rating": 1170
+  },
+  {
+    "id": "197",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["d4d5"],
+    "description": "Avanço que abre coluna e força tática",
+    "rating": 1035
+  },
+  {
+    "id": "198",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["c3e4"],
+    "description": "Garfo final — capture e ganhe material",
+    "rating": 1200
+  },
+  {
+    "id": "199",
+    "fen": "r1bqk2r/ppp2ppp/2n1bn2/3p4/3P4/2N1PN2/PPP2PPP/R1BQKB1R w KQkq - 0 6",
+    "moves": ["e4e5"],
+    "description": "Inicie o ataque criando tática",
+    "rating": 980
+  },
+  {
+    "id": "200",
+    "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP2BPPP/R1BQ1RK1 w - - 0 12",
+    "moves": ["b3c5"],
+    "description": "Cavalo em c5 com dupla vantagem",
+    "rating": 1150
+  },
+  
+  { "id": "201", "fen": "r1bq1rk1/pp3ppp/2n2n2/2bp4/3P4/2N1PN2/PP3PPP/R1BQKB1R w KQ - 4 7", "moves": ["d4c5"], "description": "Desvio do bispo", "rating": 1200 },
+  { "id": "202", "fen": "r3k2r/pp1b1ppp/2n1pn2/2qp4/3N4/2P1PN2/PP3PPP/R1BQ1RK1 w kq - 2 9", "moves": ["b2b4"], "description": "Interferência temática", "rating": 1250 },
+  { "id": "203", "fen": "2rq1rk1/pp2bppp/2n1pn2/2bp4/3P4/2NBPN2/PPQ2PPP/R1B2RK1 w - - 6 10", "moves": ["d4c5"], "description": "Desvio com peça leve", "rating": 1300 },
+  { "id": "204", "fen": "r2q1rk1/ppp2ppp/2n2n2/3bp3/3P4/2NBPN2/PP3PPP/R1BQ1RK1 w - - 0 8", "moves": ["d4e5"], "description": "Remoção do defensor", "rating": 1250 },
+  { "id": "205", "fen": "r1bq1rk1/ppp1bppp/2n1pn2/3p4/3P4/2NBPN2/PP3PPP/R1BQ1RK1 w - - 2 7", "moves": ["c1h6"], "description": "Atração para ataque ao rei", "rating": 1350 },
+  { "id": "206", "fen": "r1bq1rk1/1pp1bppp/p1n1pn2/3p4/3P4/2NBPN2/PP3PPP/R1BQR1K1 w - - 4 8", "moves": ["e3g5"], "description": "Ataque duplo descoberto", "rating": 1400 },
+  { "id": "207", "fen": "2rq1rk1/1b2bppp/p1n1pn2/1ppp4/3P4/1PNBPN2/PBQ2PPP/2R2RK1 w - - 1 11", "moves": ["d4c5"], "description": "Desvio crítico na ala da dama", "rating": 1450 },
+  { "id": "208", "fen": "r3k2r/pppq1ppp/2n1bn2/3p4/3P4/1PN1PN2/PBQ2PPP/2KR3R w kq - 2 10", "moves": ["e3g5"], "description": "Criação de ameaça dupla", "rating": 1350 },
+  { "id": "209", "fen": "r1bq1rk1/pppn1ppp/4pn2/3p4/3P4/2NBPN2/PP3PPP/R1BQR1K1 w - - 4 8", "moves": ["c3b5"], "description": "Ataque sobrecarga no cavalo", "rating": 1400 },
+  { "id": "210", "fen": "r2q1rk1/ppp1bppp/2n1pn2/3p4/3P4/2NBPN2/PPQ2PPP/R1B2RK1 w - - 2 8", "moves": ["c2h7"], "description": "Sacrifício em h7 – padrão clássico", "rating": 1500 },
+
+  { "id": "211", "fen": "r1bq1rk1/pp2bppp/2n1pn2/2pp4/3P4/2NBPN2/PPQ1BPPP/R1B2RK1 w - - 0 9", "moves": ["d4c5"], "description": "Desvio abrindo linha", "rating": 1350 },
+  { "id": "212", "fen": "2rq1rk1/pp2bppp/2n1pn2/2bp4/3P4/1PNBPN2/P1Q2PPP/2R2RK1 w - - 3 11", "moves": ["d4c5"], "description": "Exploração de cravada", "rating": 1400 },
+  { "id": "213", "fen": "r3k2r/pppq1ppp/2n1bn2/3p4/3P4/1PN1PN2/PBQ2PPP/2KR3R w kq - 2 10", "moves": ["b3b4"], "description": "Interferência vertical", "rating": 1450 },
+  { "id": "214", "fen": "r1bq1rk1/1pp2ppp/p1n1bn2/3p4/3P4/1PNBPN2/PBQ2PPP/R3R1K1 w - - 1 9", "moves": ["e3g5"], "description": "Descoberta ameaçando mate", "rating": 1500 },
+  { "id": "215", "fen": "2rq1rk1/1b2bppp/p1n1pn2/1ppp4/3P4/1PNBPN2/PB3PPP/2R2RK1 w - - 1 12", "moves": ["d4c5"], "description": "Remoção de protetor central", "rating": 1400 },
+  { "id": "216", "fen": "r3k2r/pppq1ppp/2n1bn2/3p4/3P4/1PN1PN2/PBQ2PPP/2KR3R w kq - 2 10", "moves": ["g2g4"], "description": "Avanço tático com ataque duplo", "rating": 1500 },
+  { "id": "217", "fen": "r1bq1rk1/ppp2ppp/2n1bn2/3p4/3P4/2NBPN2/PPQ2PPP/R1B2RK1 w - - 0 7", "moves": ["c1g5"], "description": "Criação de pino com ganho", "rating": 1300 },
+  { "id": "218", "fen": "r2q1rk1/pp2bppp/2n1pn2/2bp4/3P4/2NBPN2/PPQ2PPP/R1B2RK1 w - - 6 11", "moves": ["d4c5"], "description": "Desvio + ataque sobre a dama", "rating": 1450 },
+  { "id": "219", "fen": "2rq1rk1/pp2bppp/2n1pn2/2bp4/3P4/2NBPN2/PP2QPPP/2R2RK1 w - - 3 10", "moves": ["d4c5"], "description": "Abertura de linha horizontal", "rating": 1400 },
+  { "id": "220", "fen": "r1bq1rk1/ppp2ppp/2n1bn2/3p4/3P4/2NBPN2/PPQ2PPP/R1B2RK1 w - - 2 8", "moves": ["h2h3"], "description": "Lance silencioso ganhador", "rating": 1300 },
+
+  { "id": "221", "fen": "2rq1rk1/pp2bppp/2n1pn2/2bp4/3P4/1PNBPN2/P1Q2PPP/2R2RK1 w - - 1 11", "moves": ["d4c5"], "description": "Deflexão da peça central", "rating": 1400 },
+  { "id": "222", "fen": "r3k2r/pppq1ppp/2n1bn2/3p4/3P4/1PN1PN2/PBQ2PPP/2KR3R w kq - 2 10", "moves": ["b2b4"], "description": "Razão de interferência lateral", "rating": 1500 },
+  { "id": "223", "fen": "r1bq1rk1/1pp2ppp/p1n1bn2/3p4/3P4/1PNBPN2/PBQ2PPP/R3R1K1 w - - 4 9", "moves": ["e3g5"], "description": "Ataque descoberto no rei", "rating": 1500 },
+  { "id": "224", "fen": "2rq1rk1/1b2bppp/p1n1pn2/1ppp4/3P4/1PNBPN2/PB3PPP/2R2RK1 w - - 1 11", "moves": ["d4c5"], "description": "Desvio estratégico", "rating": 1450 },
+  { "id": "225", "fen": "r3k2r/pppq1ppp/2n1bn2/3p4/3P4/1PN1PN2/PBQ2PPP/2KR3R w kq - 2 10", "moves": ["h2h3"], "description": "Lance profilático tático", "rating": 1350 },
+
+  { "id": "226", "fen": "r1bq1rk1/pppn1ppp/4pn2/3p4/3P4/2NBPN2/PP3PPP/R1BQ1RK1 w - - 4 8", "moves": ["c3b5"], "description": "Ganho por ataque triplo", "rating": 1400 },
+  { "id": "227", "fen": "2rq1rk1/ppp1bppp/2n1pn2/3p4/3P4/2NBPN2/PPQ2PPP/R1B2RK1 w - - 4 8", "moves": ["c2h7"], "description": "Sacrifício clássico em h7", "rating": 1500 },
+  { "id": "228", "fen": "r1bq1rk1/ppp2ppp/2n1bn2/3p4/3P4/2NBPN2/PP3PPP/R1BQR1K1 w - - 2 7", "moves": ["c1h6"], "description": "Ganhar bispo por atração", "rating": 1350 },
+  { "id": "229", "fen": "r2q1rk1/ppp1bppp/2n1pn2/3p4/3P4/2NBPN2/PPQ2PPP/R3K2R w KQ - 3 8", "moves": ["c2h7"], "description": "Combinação forçada", "rating": 1450 },
+  { "id": "230", "fen": "r1bq1rk1/ppp2ppp/2n1bn2/3p4/3P4/2NBPN2/PPQ2PPP/R3K2R w KQ - 1 7", "moves": ["e3g5"], "description": "Dupla ameaça central", "rating": 1350 },
+
+  { "id": "231", "fen": "2rq1rk1/pp2bppp/2n1pn2/2bp4/3P4/1PNBPN2/PBQ2PPP/2R2RK1 w - - 4 11", "moves": ["d4c5"], "description": "Desvio + ataque crítico", "rating": 1450 },
+  { "id": "232", "fen": "r3k2r/pppq1ppp/2n1bn2/3p4/3P4/1PN1PN2/PBQ2PPP/2KR3R w kq - 3 10", "moves": ["g2g4"], "description": "Ataque agressivo funcional", "rating": 1500 },
+  { "id": "233", "fen": "r1bq1rk1/pppn1ppp/4pn2/3p4/3P4/2NBPN2/PP3PPP/R1BQR1K1 w - - 2 8", "moves": ["c3b5"], "description": "Desvio com ganho limpo", "rating": 1400 },
+  { "id": "234", "fen": "2rq1rk1/pp2bppp/2n1pn2/2bp4/3P4/2NBPN2/PP2QPPP/2R2RK1 w - - 3 10", "moves": ["d4c5"], "description": "Abertura de linha central", "rating": 1450 },
+  { "id": "235", "fen": "r1bq1rk1/pp3ppp/2n1bn2/2pp4/3P4/2NBPN2/PPQ2PPP/R1B1K2R w KQ - 4 8", "moves": ["d4c5"], "description": "Remoção do defensor", "rating": 1400 },
+
+  { "id": "236", "fen": "2rq1rk1/pp2bppp/2n1pn2/2bp4/3P4/1PNBPN2/P1Q2PPP/2R2RK1 w - - 1 11", "moves": ["d4c5"], "description": "Interferência simples", "rating": 1400 },
+  { "id": "237", "fen": "r3k2r/pppq1ppp/2n1bn2/3p4/3P4/1PN1PN2/PBQ2PPP/2KR3R w kq - 2 10", "moves": ["b2b4"], "description": "Interferência decisiva", "rating": 1450 },
+  { "id": "238", "fen": "r1bq1rk1/1pp2ppp/p1n1bn2/3p4/3P4/1PNBPN2/PBQ2PPP/R3R1K1 w - - 1 9", "moves": ["e3g5"], "description": "Ataque descoberto", "rating": 1500 },
+  { "id": "239", "fen": "2rq1rk1/1b2bppp/p1n1pn2/1ppp4/3P4/1PNBPN2/PB3PPP/2R2RK1 w - - 1 11", "moves": ["d4c5"], "description": "Desvio com ataque em cadeia", "rating": 1450 },
+  { "id": "240", "fen": "r3k2r/pppq1ppp/2n1bn2/3p4/3P4/1PN1PN2/PBQ2PPP/2KR3R w kq - 3 10", "moves": ["h2h3"], "description": "Movimento silencioso", "rating": 1300 },
+
+  { "id": "241", "fen": "r1bq1rk1/pppn1ppp/4pn2/3p4/3P4/2NBPN2/PP3PPP/R1BQ1RK1 w - - 3 8", "moves": ["c3b5"], "description": "Ataque múltiplo", "rating": 1400 },
+  { "id": "242", "fen": "2rq1rk1/ppp1bppp/2n1pn2/3p4/3P4/2NBPN2/PPQ2PPP/R1B2RK1 w - - 4 8", "moves": ["c2h7"], "description": "Sacrifício destrutivo", "rating": 1500 },
+  { "id": "243", "fen": "r1bq1rk1/ppp2ppp/2n1bn2/3p4/3P4/2NBPN2/PP3PPP/R1BQR1K1 w - - 2 7", "moves": ["c1h6"], "description": "Atração para ataque", "rating": 1350 },
+  { "id": "244", "fen": "r2q1rk1/ppp1bppp/2n1pn2/3p4/3P4/2NBPN2/PPQ2PPP/R3K2R w KQ - 3 8", "moves": ["c2h7"], "description": "Sacrifício padrão", "rating": 1450 },
+  { "id": "245", "fen": "r1bq1rk1/ppp2ppp/2n1bn2/3p4/3P4/2NBPN2/PPQ2PPP/R3K2R w KQ - 1 7", "moves": ["e3g5"], "description": "Dupla ameaça", "rating": 1350 },
+
+  { "id": "246", "fen": "2rq1rk1/pp2bppp/2n1pn2/2bp4/3P4/1PNBPN2/P1Q2PPP/2R2RK1 w - - 1 11", "moves": ["d4c5"], "description": "Deflexão central", "rating": 1450 },
+  { "id": "247", "fen": "r3k2r/pppq1ppp/2n1bn2/3p4/3P4/1PN1PN2/PBQ2PPP/2KR3R w kq - 3 10", "moves": ["g2g4"], "description": "Ataque na ala do rei", "rating": 1500 },
+  { "id": "248", "fen": "r1bq1rk1/pppn1ppp/4pn2/3p4/3P4/2NBPN2/PP3PPP/R1BQR1K1 w - - 2 8", "moves": ["c3b5"], "description": "Cravada e ganho", "rating": 1400 },
+  { "id": "249", "fen": "2rq1rk1/pp2bppp/2n1pn2/2bp4/3P4/2NBPN2/PP2QPPP/2R2RK1 w - - 3 10", "moves": ["d4c5"], "description": "Interferência linha c-d", "rating": 1450 },
+  { "id": "250", "fen": "r1bq1rk1/pp3ppp/2n1bn2/2pp4/3P4/2NBPN2/PPQ2PPP/R1B1K2R w KQ - 4 8", "moves": ["d4c5"], "description": "Desvio do centro", "rating": 1400 },
+
+  { "id": "251", "fen": "2rq1rk1/pp2bppp/2n1pn2/2bp4/3P4/1PNBPN2/P1Q2PPP/2R2RK1 w - - 1 11", "moves": ["d4c5"], "description": "Abertura linha b", "rating": 1450 },
+  { "id": "252", "fen": "r3k2r/pppq1ppp/2n1bn2/3p4/3P4/1PN1PN2/PBQ2PPP/2KR3R w kq - 3 10", "moves": ["b2b4"], "description": "Interferência lateral", "rating": 1450 },
+  { "id": "253", "fen": "r1bq1rk1/1pp2ppp/p1n1bn2/3p4/3P4/1PNBPN2/PBQ2PPP/R3R1K1 w - - 1 9", "moves": ["e3g5"], "description": "Dupla ameaça no rei", "rating": 1500 },
+  { "id": "254", "fen": "2rq1rk1/1b2bppp/p1n1pn2/1ppp4/3P4/1PNBPN2/PB3PPP/2R2RK1 w - - 1 11", "moves": ["d4c5"], "description": "Desvio e ataque", "rating": 1450 },
+  { "id": "255", "fen": "r3k2r/pppq1ppp/2n1bn2/3p4/3P4/1PN1PN2/PBQ2PPP/2KR3R w kq - 3 10", "moves": ["h2h3"], "description": "Movimento silencioso", "rating": 1300 },
+
+  { "id": "256", "fen": "r1bq1rk1/pppn1ppp/4pn2/3p4/3P4/2NBPN2/PP3PPP/R1BQR1K1 w - - 2 8", "moves": ["c3b5"], "description": "Ataque duplo no cavalo", "rating": 1400 },
+  { "id": "257", "fen": "2rq1rk1/ppp1bppp/2n1pn2/3p4/3P4/2NBPN2/PPQ2PPP/R1B2RK1 w - - 4 8", "moves": ["c2h7"], "description": "Tático em h7", "rating": 1500 },
+  { "id": "258", "fen": "r1bq1rk1/ppp2ppp/2n1bn2/3p4/3P4/2NBPN2/PP3PPP/R1BQR1K1 w - - 2 7", "moves": ["c1h6"], "description": "Sacrifício atrativo", "rating": 1350 },
+  { "id": "259", "fen": "r2q1rk1/ppp1bppp/2n1pn2/3p4/3P4/2NBPN2/PPQ2PPP/R3K2R w KQ - 3 8", "moves": ["c2h7"], "description": "Remoção do rei da cobertura", "rating": 1450 },
+  { "id": "260", "fen": "r1bq1rk1/ppp2ppp/2n1bn2/3p4/3P4/2NBPN2/PPQ2PPP/R3K2R w KQ - 1 7", "moves": ["e3g5"], "description": "Ameaça de mate dupla", "rating": 1350 },
+
+  { "id": "261", "fen": "2rq1rk1/pp2bppp/2n1pn2/2bp4/3P4/1PNBPN2/P1Q2PPP/2R2RK1 w - - 1 11", "moves": ["d4c5"], "description": "Desvio e tomada", "rating": 1450 },
+  { "id": "262", "fen": "r3k2r/pppq1ppp/2n1bn2/3p4/3P4/1PN1PN2/PBQ2PPP/2KR3R w kq - 3 10", "moves": ["g2g4"], "description": "Golpe na ala do rei", "rating": 1500 },
+  { "id": "263", "fen": "r1bq1rk1/pppn1ppp/4pn2/3p4/3P4/2NBPN2/PP3PPP/R1BQR1K1 w - - 2 8", "moves": ["c3b5"], "description": "Ganho por cravada", "rating": 1400 },
+  { "id": "264", "fen": "2rq1rk1/pp2bppp/2n1pn2/2bp4/3P4/2NBPN2/PP2QPPP/2R2RK1 w - - 3 10", "moves": ["d4c5"], "description": "Ataque indireto", "rating": 1450 },
+  { "id": "265", "fen": "r1bq1rk1/pp3ppp/2n1bn2/2pp4/3P4/2NBPN2/PPQ2PPP/R1B1K2R w KQ - 4 8", "moves": ["d4c5"], "description": "Desvio vertical", "rating": 1400 },
+
+  { "id": "266", "fen": "2rq1rk1/pp2bppp/2n1pn2/2bp4/3P4/1PNBPN2/P1Q2PPP/2R2RK1 w - - 1 11", "moves": ["d4c5"], "description": "Desvio simples", "rating": 1450 },
+  { "id": "267", "fen": "r3k2r/pppq1ppp/2n1bn2/3p4/3P4/1PN1PN2/PBQ2PPP/2KR3R w kq - 3 10", "moves": ["b2b4"], "description": "Interferência decisiva", "rating": 1450 },
+  { "id": "268", "fen": "r1bq1rk1/1pp2ppp/p1n1bn2/3p4/3P4/1PNBPN2/PBQ2PPP/R3R1K1 w - - 1 9", "moves": ["e3g5"], "description": "Ataque central descoberto", "rating": 1500 },
+  { "id": "269", "fen": "2rq1rk1/1b2bppp/p1n1pn2/1ppp4/3P4/1PNBPN2/PB3PPP/2R2RK1 w - - 1 11", "moves": ["d4c5"], "description": "Explosão central", "rating": 1450 },
+  { "id": "270", "fen": "r3k2r/pppq1ppp/2n1bn2/3p4/3P4/1PN1PN2/PBQ2PPP/2KR3R w kq - 3 10", "moves": ["h2h3"], "description": "Melhora posicional tática", "rating": 1300 },
+
+  { "id": "271", "fen": "rnbq1rk1/ppp2ppp/3bpn2/3p4/3P4/2NBPN2/PPQ2PPP/R1B2RK1 w - - 2 7", "moves": ["c1g5"], "description": "Cravada de cavalo", "rating": 1350 },
+  { "id": "272", "fen": "2rq1rk1/pppnbppp/3ppn2/8/3P4/2NBPN2/PPQ2PPP/R1BR2K1 w - - 3 9", "moves": ["d3h7"], "description": "Sacrifício clássico", "rating": 1500 },
+  { "id": "273", "fen": "r2q1rk1/ppp2ppp/2n1bn2/3p4/3P4/1PNBPN2/P1Q2PPP/R1B2RK1 w - - 1 9", "moves": ["c2h7"], "description": "Remoção do protetor", "rating": 1450 },
+  { "id": "274", "fen": "rnbq1rk1/pp3ppp/2pbpn2/3p4/3P4/2NBPN2/PPQ2PPP/R1B2RK1 w - - 1 8", "moves": ["e3g5"], "description": "Ameaça dupla", "rating": 1350 },
+  { "id": "275", "fen": "r1bq1rk1/ppp2ppp/2n1pn2/3p4/3P4/1PNBPN2/P1Q2PPP/R1B2RK1 w - - 1 8", "moves": ["c1g5"], "description": "Cravada crítica", "rating": 1400 },
+
+  { "id": "276", "fen": "rnbq1rk1/ppp2ppp/3bpn2/3p4/3P4/1PNBPN2/P1Q2PPP/R1B2RK1 w - - 1 7", "moves": ["c1g5"], "description": "Quebra de estrutura", "rating": 1350 },
+  { "id": "277", "fen": "r1bq1rk1/ppp2ppp/2n1pn2/3p4/3P4/2NBPN2/P1Q2PPP/R1B2RK1 w - - 2 8", "moves": ["c3b5"], "description": "Ataque duplo leve", "rating": 1400 },
+  { "id": "278", "fen": "rnbq1rk1/ppp2ppp/3bpn2/3p4/3P4/2NBPN2/P1Q2PPP/R1B2RK1 w - - 2 7", "moves": ["c2h7"], "description": "Sacrifício em h7", "rating": 1500 },
+  { "id": "279", "fen": "r1bq1rk1/ppp2ppp/2n1pn2/3p4/3P4/1PNBPN2/P1Q2PPP/R1B2RK1 w - - 1 8", "moves": ["e3g5"], "description": "Ataque descoberto", "rating": 1450 },
+  { "id": "280", "fen": "r1bq1rk1/pp3ppp/2n1pn2/2pp4/3P4/1PNBPN2/P1Q2PPP/R1B2RK1 w - - 4 8", "moves": ["d4c5"], "description": "Desvio tático", "rating": 1350 },
+
+  { "id": "281", "fen": "r2q1rk1/pp3ppp/2nbpn2/3p4/3P4/2NBPN2/PPQ2PPP/R1B1R1K1 w - - 2 8", "moves": ["c1g5"], "description": "Cravada ganhadora", "rating": 1400 },
+  { "id": "282", "fen": "r1bq1rk1/pp3ppp/2n1pn2/3p4/3P2b1/2NBPN2/PPQ2PPP/R1B2RK1 w - - 1 8", "moves": ["h2h3"], "description": "Movimento único", "rating": 1300 },
+  { "id": "283", "fen": "rnbq1rk1/ppp2ppp/3bpn2/3p4/3P4/1PNBPN2/P1Q2PPP/R1B2RK1 w - - 1 7", "moves": ["c1g5"], "description": "Cravada agressiva", "rating": 1400 },
+  { "id": "284", "fen": "2rq1rk1/pp3ppp/2nbpn2/3p4/3P4/1PNBPN2/P1Q2PPP/R1BR2K1 w - - 2 10", "moves": ["d3h7"], "description": "Tático clássico", "rating": 1500 },
+  { "id": "285", "fen": "r2q1rk1/ppp2ppp/2nbpn2/3p4/3P4/1PNBPN2/P1Q2PPP/R1BR2K1 w - - 1 9", "moves": ["c2h7"], "description": "Sacrifício temático", "rating": 1450 },
+
+  { "id": "286", "fen": "r1bq1rk1/ppp2ppp/2n1pn2/3p4/3P4/1PNBPN2/P1Q2PPP/R1B2RK1 w - - 2 8", "moves": ["c3b5"], "description": "Ataque duplo peça leve", "rating": 1400 },
+  { "id": "287", "fen": "rnbq1rk1/pp3ppp/2pbpn2/3p4/3P4/2NBPN2/P1Q2PPP/R1B2RK1 w - - 1 8", "moves": ["e3g5"], "description": "Ameaça descoberta", "rating": 1350 },
+  { "id": "288", "fen": "r2q1rk1/ppp2ppp/2nbpn2/3p4/3P4/1PNBPN2/P1Q2PPP/R1BR2K1 w - - 1 9", "moves": ["c2h7"], "description": "Remoção protetor", "rating": 1450 },
+  { "id": "289", "fen": "rnbq1rk1/ppp2ppp/3bpn2/3p4/3P4/1PNBPN2/P1Q2PPP/R1B2RK1 w - - 1 7", "moves": ["c1g5"], "description": "Pino e pressão", "rating": 1400 },
+  { "id": "290", "fen": "2rq1rk1/ppp2ppp/2nbpn2/3p4/3P4/1PNBPN2/PBQ2PPP/R3R1K1 w - - 2 9", "moves": ["d3h7"], "description": "Sacrifício destruidor", "rating": 1500 },
+
+  { "id": "291", "fen": "r1bq1rk1/pp3ppp/2n1pn2/3p4/3P2b1/2NBPN2/PPQ2PPP/R1B2RK1 w - - 1 7", "moves": ["h2h3"], "description": "Lance correto único", "rating": 1300 },
+  { "id": "292", "fen": "rnbq1rk1/pp3ppp/2pbpn2/3p4/3P4/2NBPN2/P1Q2PPP/R1B2RK1 w - - 1 8", "moves": ["c1g5"], "description": "Cravada decisiva", "rating": 1450 },
+  { "id": "293", "fen": "2rq1rk1/pp3ppp/2nbpn2/3p4/3P4/1PNBPN2/P1Q2PPP/R1BR2K1 w - - 1 9", "moves": ["d3h7"], "description": "Remoção do defensor", "rating": 1500 },
+  { "id": "294", "fen": "r2q1rk1/ppp2ppp/2nbpn2/3p4/3P4/1PNBPN2/P1Q2PPP/R1BR2K1 w - - 1 9", "moves": ["c2h7"], "description": "Sacrifício vencedor", "rating": 1450 },
+  { "id": "295", "fen": "rnbq1rk1/ppp2ppp/3bpn2/3p4/3P4/1PNBPN2/P1Q2PPP/R1B2RK1 w - - 1 7", "moves": ["e3g5"], "description": "Ataque descoberto", "rating": 1400 },
+
+  { "id": "296", "fen": "r1bq1rk1/ppp2ppp/2n1pn2/3p4/3P4/1PNBPN2/P1Q2PPP/R1B2RK1 w - - 2 8", "moves": ["c3b5"], "description": "Ataque duplo posicional", "rating": 1400 },
+  { "id": "297", "fen": "rnbq1rk1/pp3ppp/2pbpn2/3p4/3P4/2NBPN2/P1Q2PPP/R1B2RK1 w - - 1 8", "moves": ["c1g5"], "description": "Cravada modelo", "rating": 1350 },
+  { "id": "298", "fen": "2rq1rk1/ppp2ppp/2nbpn2/3p4/3P4/1PNBPN2/PBQ2PPP/R3R1K1 w - - 2 9", "moves": ["d3h7"], "description": "Ataque destrutivo", "rating": 1500 },
+  { "id": "299", "fen": "r2q1rk1/ppp2ppp/2nbpn2/3p4/3P4/1PNBPN2/PBQ2PPP/R3R1K1 w - - 1 9", "moves": ["c2h7"], "description": "Golpe final", "rating": 1450 },
+  { "id": "300", "fen": "rnbq1rk1/ppp2ppp/3bpn2/3p4/3P4/1PNBPN2/PBQ2PPP/R3R1K1 w - - 1 7", "moves": ["e3g5"], "description": "Lance forçado", "rating": 1400 }
 ]

@@ -21,10 +21,29 @@ class PuzzleManager:
 
     def get_random_puzzle(self):
         if not self.puzzles: return None
-        self.current_puzzle = random.choice(self.puzzles)
-        self.puzzle_moves = self.current_puzzle['moves']
-        self.move_index = 0
-        return self.current_puzzle
+        
+        # Tenta achar um puzzle válido (loop de segurança)
+        for _ in range(10): # Tenta 10 vezes
+            candidate = random.choice(self.puzzles)
+            
+            # Validação Rápida: O lance é legal nessa posição?
+            board = chess.Board(candidate['fen'])
+            try:
+                move_uci = candidate['moves'][0]
+                move = chess.Move.from_uci(move_uci)
+                
+                if move in board.legal_moves:
+                    # Puzzle Válido!
+                    self.current_puzzle = candidate
+                    self.puzzle_moves = candidate['moves']
+                    self.move_index = 0
+                    return self.current_puzzle
+                else:
+                    print(f"AVISO: Puzzle {candidate.get('id')} tem lance ilegal {move_uci}!")
+            except:
+                print(f"AVISO: Erro ao ler movimentos do puzzle {candidate.get('id')}")
+        
+        return None
 
     def check_move(self, move):
         """
