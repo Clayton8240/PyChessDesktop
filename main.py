@@ -81,7 +81,7 @@ def main():
                         estado_atual = ESTADO_RANKING
 
             # --- Tela de escolha de cor ---
-            if estado_atual == ESTADO_ESCOLHA_COR:
+            elif estado_atual == ESTADO_ESCOLHA_COR:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_b:
                         jogador_brancas = True
@@ -112,7 +112,7 @@ def main():
                                 engine.board.push(move)
 
             # --- Lógica de Input de Nome ---
-            if estado_atual == ESTADO_INPUT_NOME:
+            elif estado_atual == ESTADO_INPUT_NOME:
                 resultado = input_nome.handle_event(event)
                 if resultado == 'submit':
                     # Salva e vai para o Ranking
@@ -120,7 +120,7 @@ def main():
                     estado_atual = ESTADO_RANKING
 
             # --- Lógica do Jogo ---
-            if estado_atual == ESTADO_JOGANDO and not aguardando_ia:
+            elif estado_atual == ESTADO_JOGANDO and not aguardando_ia:
                 # Só permite jogada do jogador se for a vez da sua cor
                 if (engine.board.turn == (chess.WHITE if jogador_brancas else chess.BLACK)):
                     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
