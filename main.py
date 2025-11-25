@@ -125,7 +125,21 @@ def main():
     if config_manager.get("fullscreen"):
         pygame.display.toggle_fullscreen()
     
-    pygame.display.set_caption("PyChess Desktop")
+    pygame.display.set_caption("My Chess")
+
+    # --- ÍCONE DA JANELA (NOVO) ---
+    try:
+        # Caminho para o Rei Branco
+        icon_path = os.path.join("assets", "images", "pieces", "w_k.png")
+        
+        # Carrega e define
+        if os.path.exists(icon_path):
+            icon_surface = pygame.image.load(icon_path)
+            pygame.display.set_icon(icon_surface)
+    except Exception as e:
+        print(f"Aviso: Não foi possível carregar o ícone. {e}")
+    # ------------------------------
+
     clock = pygame.time.Clock()
 
     # Inicialização
@@ -940,14 +954,14 @@ def main():
             fonte_sub = pygame.font.SysFont("segoe ui", 24)
             
             # Sombra do texto
-            txt_sombra = fonte_logo.render("PyChess", True, (0, 0, 0))
+            txt_sombra = fonte_logo.render("My Chess", True, (0, 0, 0))
             screen.blit(txt_sombra, (83, 103))
             
-            txt_logo = fonte_logo.render("PyChess", True, (220, 220, 220))
+            txt_logo = fonte_logo.render("My Chess", True, (220, 220, 220))
             screen.blit(txt_logo, (80, 100))
             
             txt_desc = fonte_sub.render("Desktop Edition", True, (100, 200, 100)) # Verde suave
-            screen.blit(txt_desc, (85, 170))
+            screen.blit(txt_desc, (85, 185))
 
             # 4. Lado Direito: Botões Modernos
             # Lista de botões com suas ações/textos
