@@ -4,13 +4,14 @@ import chess
 import tkinter as tk
 from tkinter import filedialog
 from src.config import *
-from src.ui import TextInput, LeaderboardView, DisplayBoard, THEMES, EvaluationBar
+from src.ui import TextInput, LeaderboardView, DisplayBoard, EvaluationBar, ColorSlider
 from src.engine import Engine
 from src.scoring import ScoreManager
 from src.ai import get_best_move, evaluate_board
 from src.sound import SoundManager
 from src.pgn_manager import PGNManager
-from src.puzzle_manager import PuzzleManager # <--- Adicione isto
+from src.puzzle_manager import PuzzleManager
+from src.skin_manager import SkinManager
 
 # Função auxiliar para calcular material
 def calcular_material(board, is_white_player):
@@ -58,7 +59,10 @@ ESTADO_RANKING = 4
 ESTADO_TEMA = 5
 ESTADO_PGN_SELECT = 6
 ESTADO_SIMULACAO = 7
-ESTADO_PUZZLE = 8 # <--- Novo Estado
+ESTADO_PUZZLE = 8
+ESTADO_EDITOR = 9 # Novo estado
+
+WHITE = (255, 255, 255)
 
 def main():
     pygame.init()
@@ -73,10 +77,27 @@ def main():
     sound_manager = SoundManager()
     
     # UI Components
-    tema_atual = 'classico'
-    display_board = DisplayBoard(screen, tamanho_quadrado=80, tema=tema_atual)
+    skin_manager = SkinManager() # Escaneia as pastas
+    current_skin_id = 'default'
+    
+    # Passa os dados da skin inicial
+    display_board = DisplayBoard(screen, tamanho_quadrado=80, skin_data=skin_manager.get_skin_data('default'))
     eval_bar = EvaluationBar(pygame.Rect(640, 0, 20, 640))
     input_nome = TextInput(pygame.font.SysFont("consolas", 30), rect=pygame.Rect(170, 300, 300, 50))
+    
+    # Sliders para Casas Claras (R, G, B) e Escuras (R, G, B)
+    sliders_editor = [
+        # Claras
+        ColorSlider(250, 150, 200, 15, "R", 240, (200, 50, 50)),
+        ColorSlider(250, 190, 200, 15, "G", 217, (50, 200, 50)),
+        ColorSlider(250, 230, 200, 15, "B", 181, (50, 50, 255)),
+        # Escuras
+        ColorSlider(250, 320, 200, 15, "R", 181, (200, 50, 50)),
+        ColorSlider(250, 360, 200, 15, "G", 136, (50, 200, 50)),
+        ColorSlider(250, 400, 200, 15, "B", 99, (50, 50, 255))
+    ]
+    editor_nome_input = TextInput(pygame.font.SysFont("consolas", 24), max_length=15, rect=pygame.Rect(250, 480, 300, 40))
+    editor_nome_input.text = "Meu Tema"
     
     # Fontes
     fonte_titulo = pygame.font.SysFont("arial", 40, bold=True)
@@ -335,21 +356,68 @@ def main():
                                 engine.board.push(move)
                                 tocar_som_acao(engine.board, move, sound_manager, acao='move')
 
-            # --- ESTADO: TEMA ---
             elif estado_atual == ESTADO_TEMA:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    btn_voltar = pygame.Rect(320, 520, 200, 44)
-                    if btn_voltar.collidepoint(event.pos):
-                        sound_manager.play('menu')
-                        estado_atual = ESTADO_MENU
+                    skins_disponiveis = skin_manager.get_skin_names()
+                    y_start = 120
                     
-                    temas_lista = ['classico', 'torneio', 'dark', 'retro']
-                    for i, tema in enumerate(temas_lista):
-                        btn_rect = pygame.Rect(220, 180 + i*80, 400, 60)
-                        if btn_rect.collidepoint(event.pos):
-                            tema_atual = tema
-                            display_board.set_tema(tema)
+                    # Checa clique na lista
+                    for i, (skin_id, skin_name) in enumerate(skins_disponiveis):
+                        if i > 5: break
+                        rect = pygame.Rect(220, y_start + i*70, 400, 50)
+                        if rect.collidepoint(event.pos):
+                            current_skin_id = skin_id
+                            # Carrega os dados e aplica no tabuleiro
+                            dados = skin_manager.get_skin_data(skin_id)
+                            display_board.set_skin(dados)
                             sound_manager.play('menu')
+
+                    # Botão Voltar
+                    btn_voltar = pygame.Rect(430, 550, 190, 40)
+                    if btn_voltar.collidepoint(event.pos):
+                        estado_atual = ESTADO_MENU
+                        sound_manager.play('menu')
+                        
+                    # Botão Abrir Pasta (Quality of Life)
+                    btn_folder = pygame.Rect(220, 550, 190, 40)
+                    if btn_folder.collidepoint(event.pos):
+                        import os
+                        # Abre o explorer do Windows/Linux
+                        os.startfile(skin_manager.base_folder)
+
+                    # Adicione um botão "CRIAR NOVO"
+                    btn_criar = pygame.Rect(630, 550, 150, 40)
+                    if btn_criar.collidepoint(event.pos):
+                        estado_atual = ESTADO_EDITOR
+                        sound_manager.play('menu')
+            
+            elif estado_atual == ESTADO_EDITOR:
+                editor_nome_input.handle_event(event)
+                for sl in sliders_editor:
+                    sl.handle_event(event)
+                
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    btn_salvar = pygame.Rect(300, 550, 240, 50)
+                    btn_cancelar = pygame.Rect(50, 550, 150, 50)
+                    
+                    if btn_salvar.collidepoint(event.pos):
+                        # Pega valores
+                        l_rgb = (sliders_editor[0].val, sliders_editor[1].val, sliders_editor[2].val)
+                        d_rgb = (sliders_editor[3].val, sliders_editor[4].val, sliders_editor[5].val)
+                        nome = editor_nome_input.text
+                        
+                        # Salva
+                        new_id = skin_manager.save_new_skin(nome, l_rgb, d_rgb)
+                        
+                        # Aplica e volta
+                        display_board.set_skin(skin_manager.get_skin_data(new_id))
+                        current_skin_id = new_id
+                        estado_atual = ESTADO_TEMA
+                        sound_manager.play('game_over') # Sucesso
+                        
+                    elif btn_cancelar.collidepoint(event.pos):
+                        estado_atual = ESTADO_TEMA
+                        sound_manager.play('menu')
 
             # --- ESTADO: JOGANDO ---
             elif estado_atual == ESTADO_JOGANDO and not aguardando_ia:
@@ -643,20 +711,90 @@ def main():
             screen.blit(fonte_btn.render(st, True, c), (670, 100))
 
         elif estado_atual == ESTADO_TEMA:
-            lbl = fonte_titulo.render("Escolha o Tema", True, (255,255,255))
-            screen.blit(lbl, (840//2 - lbl.get_width()//2, 80))
-            temas = ['classico', 'torneio', 'dark', 'retro']
-            labels = ['Clássico', 'Torneio', 'Dark Mode', 'Retrô']
-            for i, t in enumerate(temas):
-                r = pygame.Rect(220, 180 + i*80, 400, 60)
-                c = (60, 100, 160) if tema_atual == t else (80, 80, 80)
-                pygame.draw.rect(screen, c, r, border_radius=10)
-                lbl = fonte_btn.render(labels[i], True, (255,255,255))
-                screen.blit(lbl, (r.centerx-lbl.get_width()//2, r.centery-lbl.get_height()//2))
+            screen.fill((30, 30, 40))
+            lbl = fonte_titulo.render("Escolha a Skin", True, (255,255,255))
+            screen.blit(lbl, (840//2 - lbl.get_width()//2, 50))
             
-            btn_voltar = pygame.Rect(320, 520, 200, 44)
-            pygame.draw.rect(screen, (150, 50, 50), btn_voltar, border_radius=10)
-            screen.blit(fonte_btn.render("Voltar", True, (255,255,255)), (380, 525))
+            # Pega a lista de skins disponíveis (ID, Nome)
+            skins_disponiveis = skin_manager.get_skin_names()
+            
+            # Paginação simples (se tiver muitas skins, mostra as primeiras 5)
+            y_start = 120
+            for i, (skin_id, skin_name) in enumerate(skins_disponiveis):
+                if i > 5: break # Limite para não estourar tela por enquanto
+                
+                rect = pygame.Rect(220, y_start + i*70, 400, 50)
+                
+                # Destaca a selecionada
+                cor = (60, 150, 100) if current_skin_id == skin_id else (80, 80, 80)
+                
+                # Desenha botão
+                pygame.draw.rect(screen, cor, rect, border_radius=10)
+                
+                # Texto do nome
+                txt = fonte_btn.render(skin_name, True, (255,255,255))
+                screen.blit(txt, (rect.centerx - txt.get_width()//2, rect.centery - txt.get_height()//2))
+                
+                # Lógica de Clique (aqui dentro ou no loop de eventos separado)
+                # Para simplificar a resposta, vou colocar a detecção aqui se você estiver usando 
+                # a estrutura "desenho separado". Se for a estrutura "eventos separados", mova isso:
+            
+            # Botão "Abrir Pasta de Skins" (Para ajudar o usuário)
+            btn_folder = pygame.Rect(220, 550, 190, 40)
+            pygame.draw.rect(screen, (100, 100, 150), btn_folder, border_radius=8)
+            screen.blit(fonte_small.render("Abrir Pasta", True, WHITE), (btn_folder.x+50, btn_folder.y+10))
+
+            btn_voltar = pygame.Rect(430, 550, 190, 40)
+            pygame.draw.rect(screen, (150, 50, 50), btn_voltar, border_radius=8)
+            screen.blit(fonte_small.render("Voltar", True, WHITE), (btn_voltar.x+70, btn_voltar.y+10))
+            
+            btn_criar = pygame.Rect(630, 550, 150, 40)
+            pygame.draw.rect(screen, (50, 150, 50), btn_criar, border_radius=8)
+            screen.blit(fonte_small.render("Criar Novo", True, WHITE), (btn_criar.x+40, btn_criar.y+10))
+
+        elif estado_atual == ESTADO_EDITOR:
+            screen.fill((30, 30, 35))
+            lbl = fonte_titulo.render("Criador de Temas", True, WHITE)
+            screen.blit(lbl, (280, 30))
+            
+            # Recupera cores atuais dos sliders para preview
+            cor_clara = (sliders_editor[0].val, sliders_editor[1].val, sliders_editor[2].val)
+            cor_escura = (sliders_editor[3].val, sliders_editor[4].val, sliders_editor[5].val)
+            
+            # Preview (Desenha um mini tabuleiro 2x2)
+            prev_rect = pygame.Rect(550, 150, 200, 200)
+            pygame.draw.rect(screen, (255, 255, 255), prev_rect, 4) # Borda
+            pygame.draw.rect(screen, cor_clara, (550, 150, 100, 100))
+            pygame.draw.rect(screen, cor_escura, (650, 150, 100, 100))
+            pygame.draw.rect(screen, cor_escura, (550, 250, 100, 100))
+            pygame.draw.rect(screen, cor_clara, (650, 250, 100, 100))
+            
+            # Desenha Peças de exemplo no preview (opcional)
+            ex_pawn = display_board.images.get((chess.PAWN, chess.WHITE))
+            if ex_pawn: screen.blit(ex_pawn, (560, 160))
+            
+            # Labels das seções
+            screen.blit(fonte_btn.render("Cor Casas Claras", True, cor_clara), (250, 110))
+            screen.blit(fonte_btn.render("Cor Casas Escuras", True, cor_escura), (250, 280))
+            
+            # Desenha Sliders
+            for sl in sliders_editor:
+                sl.draw(screen, fonte_small)
+                
+            # Input Nome
+            screen.blit(fonte_small.render("Nome do Tema:", True, (200, 200, 200)), (250, 450))
+            editor_nome_input.draw(screen)
+            
+            # Botões
+            btn_salvar = pygame.Rect(300, 550, 240, 50)
+            pygame.draw.rect(screen, (50, 200, 100), btn_salvar, border_radius=10)
+            ls = fonte_btn.render("Salvar Tema", True, WHITE)
+            screen.blit(ls, (btn_salvar.centerx - ls.get_width()//2, btn_salvar.centery - ls.get_height()//2))
+            
+            btn_cancelar = pygame.Rect(50, 550, 150, 50)
+            pygame.draw.rect(screen, (200, 50, 50), btn_cancelar, border_radius=10)
+            lc = fonte_btn.render("Cancelar", True, WHITE)
+            screen.blit(lc, (btn_cancelar.centerx - lc.get_width()//2, btn_cancelar.centery - lc.get_height()//2))
 
         elif estado_atual == ESTADO_ESCOLHA_COR:
             # Configuração
