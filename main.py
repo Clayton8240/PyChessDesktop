@@ -69,6 +69,7 @@ ESTADO_EDITOR = 9
 ESTADO_CONFIG = 10 # Novo ID de estado
 ESTADO_GAME_OVER = 11 
 ESTADO_TUTORIAL = 12 # Novo ID 
+ESTADO_CREDITOS = 13 # <--- NOVO
 
 WHITE = (255, 255, 255)
 
@@ -668,6 +669,13 @@ def main():
                         aviso_texto = "Estatísticas Zeradas!"
                         aviso_timer = pygame.time.get_ticks() + 2000
 
+                    # BOTÃO IR PARA CRÉDITOS (NOVO)
+                    # Vamos posicionar acima do Reset ou ao lado
+                    btn_creditos_rect = pygame.Rect(600, 550, 150, 40) # Canto inferior direito
+                    if btn_creditos_rect.collidepoint(event.pos):
+                        sound_manager.play('menu')
+                        estado_atual = ESTADO_CREDITOS
+
                     # Botão Voltar
                     btn_voltar = pygame.Rect(320, 550, 200, 40)
                     if btn_voltar.collidepoint(event.pos):
@@ -776,6 +784,19 @@ def main():
                             estado_atual = ESTADO_INPUT_NOME
                         else:
                             estado_atual = ESTADO_RANKING
+
+            # --- ESTADO: CRÉDITOS ---
+            elif estado_atual == ESTADO_CREDITOS:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        estado_atual = ESTADO_CONFIG
+                        sound_manager.play('menu')
+
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    btn_voltar = pygame.Rect(320, 550, 200, 40)
+                    if btn_voltar.collidepoint(event.pos):
+                        estado_atual = ESTADO_CONFIG
+                        sound_manager.play('menu')
 
             # --- ESTADO: INPUT NOME ---
             elif estado_atual == ESTADO_INPUT_NOME:
@@ -1034,8 +1055,8 @@ def main():
             screen.blit(txt_stats, (10, 615))
             
             # Versão
-            txt_ver = fonte_small.render("v1.0.0", True, (60, 60, 60))
-            screen.blit(txt_ver, (780, 615))
+            txt_ver = fonte_small.render("v1.0.0 | Dev: Clayton Almeida", True, (60, 60, 60))
+            screen.blit(txt_ver, (550, 615))
 
         elif estado_atual == ESTADO_PGN_SELECT:
             lbl = fonte_titulo.render("Selecione uma Partida", True, (255,255,255))
@@ -1284,6 +1305,54 @@ def main():
             
             lbl_reset = fonte_btn.render("Resetar Estatísticas", True, (255, 255, 255))
             screen.blit(lbl_reset, (btn_reset_rect.centerx - lbl_reset.get_width()//2, btn_reset_rect.centery - lbl_reset.get_height()//2))
+
+            # BOTÃO CRÉDITOS (NOVO)
+            btn_creditos_rect = pygame.Rect(600, 550, 150, 40)
+            pygame.draw.rect(screen, (60, 100, 160), btn_creditos_rect, border_radius=8) # Azul
+            lbl_cred = fonte_btn.render("Créditos", True, WHITE)
+            # Centraliza texto (ajuste fino se necessário)
+            screen.blit(lbl_cred, (btn_creditos_rect.centerx - lbl_cred.get_width()//2, btn_creditos_rect.centery - lbl_cred.get_height()//2))
+
+            # Botão Voltar
+            btn_voltar = pygame.Rect(320, 550, 200, 40)
+            pygame.draw.rect(screen, (150, 50, 50), btn_voltar, border_radius=8)
+            l = fonte_btn.render("Voltar", True, WHITE)
+            screen.blit(l, (btn_voltar.centerx - l.get_width()//2, btn_voltar.y+5))
+
+        elif estado_atual == ESTADO_CREDITOS:
+            screen.fill((25, 25, 30)) # Fundo escuro
+            
+            # Título
+            lbl = fonte_titulo.render("Sobre o Jogo", True, (255, 255, 255))
+            screen.blit(lbl, (840//2 - lbl.get_width()//2, 50))
+            
+            # Informações do Desenvolvedor
+            y_start = 120
+            linhas = [
+                ("My Chess - Desktop Edition", (100, 200, 255)),
+                ("Versão 1.0.0", (150, 150, 150)),
+                ("", (0,0,0)), # Espaço
+                ("Desenvolvido por:", (200, 200, 200)),
+                ("Clayton Almeida", (255, 215, 0)), # Dourado (Troque pelo seu nome)
+                ("", (0,0,0)),
+                ("Bibliotecas Utilizadas:", (200, 200, 200)),
+                ("Python 3 + Pygame-ce", (180, 180, 180)),
+                ("python-chess (Lógica)", (180, 180, 180)),
+                ("", (0,0,0)),
+                ("Obrigado por jogar!", (100, 255, 100))
+            ]
+            
+            fonte_creditos = pygame.font.SysFont("arial", 22)
+            fonte_destaque = pygame.font.SysFont("arial", 28, bold=True)
+            
+            for texto, cor in linhas:
+                if texto == "Clayton Almeida": # Destaque para o nome
+                    surf = fonte_destaque.render(texto, True, cor)
+                else:
+                    surf = fonte_creditos.render(texto, True, cor)
+                
+                screen.blit(surf, (840//2 - surf.get_width()//2, y_start))
+                y_start += 35
 
             # Botão Voltar
             btn_voltar = pygame.Rect(320, 550, 200, 40)
