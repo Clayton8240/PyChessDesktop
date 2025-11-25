@@ -19,29 +19,37 @@ class PuzzleManager:
         else:
             print("Arquivo de puzzles não encontrado!")
 
-    def get_random_puzzle(self):
+    def get_random_puzzle(self, min_rating=0, max_rating=9999):
         if not self.puzzles: return None
         
-        # Tenta achar um puzzle válido (loop de segurança)
-        for _ in range(10): # Tenta 10 vezes
-            candidate = random.choice(self.puzzles)
+        # 1. CRIA UMA LISTA FILTRADA NA HORA
+        # Seleciona apenas os puzzles que estão dentro da faixa de rating pedida
+        candidatos = [
+            p for p in self.puzzles 
+            if min_rating <= int(p.get('rating', 0)) <= max_rating
+        ]
+        
+        if not candidatos:
+            print(f"Nenhum puzzle encontrado na faixa {min_rating}-{max_rating}")
+            return None
+        
+        # 2. Tenta achar um puzzle válido dentro dos candidatos filtrados
+        for _ in range(20): # Aumentei as tentativas para garantir
+            candidate = random.choice(candidatos)
             
-            # Validação Rápida: O lance é legal nessa posição?
+            # Validação Rápida (igual ao anterior)
             board = chess.Board(candidate['fen'])
             try:
                 move_uci = candidate['moves'][0]
                 move = chess.Move.from_uci(move_uci)
                 
                 if move in board.legal_moves:
-                    # Puzzle Válido!
                     self.current_puzzle = candidate
                     self.puzzle_moves = candidate['moves']
                     self.move_index = 0
                     return self.current_puzzle
-                else:
-                    print(f"AVISO: Puzzle {candidate.get('id')} tem lance ilegal {move_uci}!")
             except:
-                print(f"AVISO: Erro ao ler movimentos do puzzle {candidate.get('id')}")
+                pass
         
         return None
 

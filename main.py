@@ -70,6 +70,7 @@ ESTADO_CONFIG = 10 # Novo ID de estado
 ESTADO_GAME_OVER = 11 
 ESTADO_TUTORIAL = 12 # Novo ID 
 ESTADO_CREDITOS = 13 # <--- NOVO
+ESTADO_PUZZLE_MENU = 14 # Novo ID
 
 WHITE = (255, 255, 255)
 
@@ -201,6 +202,7 @@ def main():
     tempo_escolhido = 600
     ultima_dica_ia = None
     ultima_dica_move = None  # Guarda o movimento sugerido para desenhar seta
+    puzzle_difficulty_range = (0, 9999) # Padrão: Tudo
 
     # --- Notificações ---
     aviso_texto = ""
@@ -322,14 +324,8 @@ def main():
                         sound_manager.play('menu')
                         estado_atual = ESTADO_PGN_SELECT
                     elif btn_puzzle.collidepoint(event.pos):
-                        p = puzzle_manager.get_random_puzzle()
-                        if p:
-                            engine.board.set_fen(p['fen'])
-                            display_board.set_flip(not engine.board.turn)
-                            puzzle_info = f"{p['description']} (Rating: {p['rating']})"
-                            feedback_puzzle = "Encontre o melhor lance!"
-                            estado_atual = ESTADO_PUZZLE
-                            sound_manager.play('menu')
+                        sound_manager.play('menu')
+                        estado_atual = ESTADO_PUZZLE_MENU # <--- MUDOU AQUI
                     elif btn_tema.collidepoint(event.pos):
                         sound_manager.play('menu')
                         estado_atual = ESTADO_TEMA
@@ -796,6 +792,49 @@ def main():
                     btn_voltar = pygame.Rect(320, 550, 200, 40)
                     if btn_voltar.collidepoint(event.pos):
                         estado_atual = ESTADO_CONFIG
+                        sound_manager.play('menu')
+
+            # --- ESTADO: MENU DE PUZZLES ---
+            elif estado_atual == ESTADO_PUZZLE_MENU:
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    # Coordenadas base (Centralizado)
+                    cx = 840 // 2
+                    cy = 200
+                    
+                    # Definição dos botões
+                    btn_facil = pygame.Rect(cx - 150, cy, 300, 60)
+                    btn_medio = pygame.Rect(cx - 150, cy + 80, 300, 60)
+                    btn_dificil = pygame.Rect(cx - 150, cy + 160, 300, 60)
+                    btn_voltar = pygame.Rect(cx - 100, cy + 260, 200, 50)
+                    
+                    clicked = False
+                    
+                    if btn_facil.collidepoint(event.pos):
+                        puzzle_difficulty_range = (0, 800) # Iniciante
+                        clicked = True
+                    elif btn_medio.collidepoint(event.pos):
+                        puzzle_difficulty_range = (801, 1200) # Intermediário
+                        clicked = True
+                    elif btn_dificil.collidepoint(event.pos):
+                        puzzle_difficulty_range = (1201, 3000) # Avançado
+                        clicked = True
+                        
+                    if clicked:
+                        # Carrega o primeiro puzzle com o filtro
+                        p = puzzle_manager.get_random_puzzle(*puzzle_difficulty_range)
+                        if p:
+                            engine.board.set_fen(p['fen'])
+                            display_board.set_flip(not engine.board.turn)
+                            puzzle_info = f"{p['description']} (Rating: {p['rating']})"
+                            feedback_puzzle = "Encontre o melhor lance!"
+                            estado_atual = ESTADO_PUZZLE
+                            sound_manager.play('menu')
+                        else:
+                            # Caso não tenha puzzles nessa faixa (raro)
+                            print("Sem puzzles nessa faixa!")
+                            
+                    if btn_voltar.collidepoint(event.pos):
+                        estado_atual = ESTADO_MENU
                         sound_manager.play('menu')
 
             # --- ESTADO: INPUT NOME ---
@@ -1360,6 +1399,41 @@ def main():
             l = fonte_btn.render("Voltar", True, WHITE)
             screen.blit(l, (btn_voltar.centerx - l.get_width()//2, btn_voltar.y+5))
 
+        elif estado_atual == ESTADO_PUZZLE_MENU:
+            screen.fill((35, 30, 40))
+            
+            # Título
+            lbl = fonte_titulo.render("Selecione a Dificuldade", True, WHITE)
+            screen.blit(lbl, (840//2 - lbl.get_width()//2, 80))
+            
+            cx = 840 // 2
+            cy = 200
+            
+            # Botões
+            botoes = [
+                ("Iniciante (< 800)", (100, 200, 100), 0),
+                ("Intermediário (800 - 1200)", (200, 200, 100), 80),
+                ("Avançado (> 1200)", (200, 100, 100), 160)
+            ]
+            
+            for txt, color, offset in botoes:
+                rect = pygame.Rect(cx - 150, cy + offset, 300, 60)
+                
+                # Efeito Hover simples
+                if rect.collidepoint(pygame.mouse.get_pos()):
+                    pygame.draw.rect(screen, (min(255, color[0]+30), min(255, color[1]+30), min(255, color[2]+30)), rect, border_radius=15)
+                else:
+                    pygame.draw.rect(screen, color, rect, border_radius=15)
+                    
+                lbl_btn = fonte_btn.render(txt, True, (50, 50, 50)) # Texto escuro para contraste
+                screen.blit(lbl_btn, (rect.centerx - lbl_btn.get_width()//2, rect.centery - lbl_btn.get_height()//2))
+
+            # Botão Voltar
+            btn_voltar = pygame.Rect(cx - 100, cy + 260, 200, 50)
+            pygame.draw.rect(screen, (80, 80, 80), btn_voltar, border_radius=10)
+            lbl_v = fonte_btn.render("Voltar", True, WHITE)
+            screen.blit(lbl_v, (btn_voltar.centerx - lbl_v.get_width()//2, btn_voltar.centery - lbl_v.get_height()//2))
+
         elif estado_atual == ESTADO_GAME_OVER:
             # 1. Desenha o jogo no fundo (congelado) para contexto
             display_board.draw(engine.board)
@@ -1555,7 +1629,8 @@ def main():
                 if pygame.mouse.get_pressed()[0]:
                     mx, my = pygame.mouse.get_pos()
                     if btn_prox.collidepoint(mx, my):
-                        p = puzzle_manager.get_random_puzzle()
+                        # USA O FILTRO SALVO NA VARIÁVEL
+                        p = puzzle_manager.get_random_puzzle(*puzzle_difficulty_range)
                         if p:
                             engine.board.set_fen(p['fen'])
                             display_board.set_flip(not engine.board.turn)
