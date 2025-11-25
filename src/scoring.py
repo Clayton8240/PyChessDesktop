@@ -47,17 +47,40 @@ class ScoreManager:
 			scores_path = os.path.join(base_dir, 'data', 'scores.json')
 		self.scores_path = scores_path
 
-	def calcular_pontuacao(self, vencedor: bool, material_restante: int, tempo_gasto: int) -> int:
+	def calcular_pontuacao(self, resultado_tipo: str, material_restante: int, tempo_gasto: int, dificuldade: int = 2) -> int:
 		"""
-		Calcula a pontuação final.
-		vencedor: True se ganhou, False se perdeu (derrota = 0 pontos)
-		material_restante: soma dos valores das peças vivas (Peão=1, Bispo=3, Torre=5, Rainha=9)
-		tempo_gasto: tempo em segundos
+		Calcula pontuação granular.
+		resultado_tipo: 'win', 'loss', ou 'draw'
 		"""
-		if not vencedor:
-			return 0
-		pontos = 1000 + (material_restante * 50) - (tempo_gasto * 2)
-		return max(pontos, 0)
+		# 1. Pontuação Base (Define o patamar)
+		if resultado_tipo == 'win':
+			base = 5000
+		elif resultado_tipo == 'draw':
+			base = 2500
+		else: # loss
+			base = 1000
+			
+		# 2. Bônus de Material (Valoriza proteger suas peças)
+		# Ex: Terminar com Rainha (9) e 2 Peões (2) = 11 * 50 = 550 pts
+		bonus_material = material_restante * 50
+		
+		# 3. Penalidade de Tempo (Suave)
+		# Perde 5 pontos a cada 10 segundos jogados
+		penalidade_tempo = int(tempo_gasto * 0.5)
+		
+		# 4. Multiplicador de Dificuldade
+		# Fácil(1)=x1.0, Médio(2)=x1.5, Difícil(3)=x2.0, Pro(4)=x3.0
+		multiplicadores = {1: 1.0, 2: 1.5, 3: 2.0, 4: 3.0}
+		fator = multiplicadores.get(dificuldade, 1.0)
+		
+		# Cálculo Final
+		pontos_brutos = base + bonus_material - penalidade_tempo
+		
+		# Aplica o multiplicador
+		pontos_finais = int(pontos_brutos * fator)
+		
+		# Garante pontuação mínima para não frustrar (ex: nunca negativo)
+		return max(pontos_finais, 100)
 
 	def load_scores(self) -> List[Dict]:
 		"""Carrega e retorna a lista de recordes ordenada por score decrescente."""

@@ -1,10 +1,12 @@
 import sys
+import os
+import subprocess
 import pygame
 import chess
 import tkinter as tk
 from tkinter import filedialog
 from src.config import *
-from src.ui import TextInput, LeaderboardView, DisplayBoard, EvaluationBar, ColorSlider
+from src.ui import TextInput, LeaderboardView, DisplayBoard, EvaluationBar, Slider
 from src.engine import Engine
 from src.scoring import ScoreManager
 from src.ai import get_best_move, evaluate_board
@@ -12,6 +14,8 @@ from src.sound import SoundManager
 from src.pgn_manager import PGNManager
 from src.puzzle_manager import PuzzleManager
 from src.skin_manager import SkinManager
+from src.config_manager import ConfigManager
+from src.tutorial_manager import TutorialManager
 
 # Função auxiliar para calcular material
 def calcular_material(board, is_white_player):
@@ -60,13 +64,66 @@ ESTADO_TEMA = 5
 ESTADO_PGN_SELECT = 6
 ESTADO_SIMULACAO = 7
 ESTADO_PUZZLE = 8
-ESTADO_EDITOR = 9 # Novo estado
+ESTADO_EDITOR = 9
+ESTADO_CONFIG = 10 # Novo ID de estado
+ESTADO_GAME_OVER = 11 
+ESTADO_TUTORIAL = 12 # Novo ID 
 
 WHITE = (255, 255, 255)
 
+def desenhar_texto_quebrado(screen, text, color, rect, font, aa=True, bkg=None):
+    """Desenha texto quebrando linhas automaticamente dentro de um retângulo."""
+    y = rect.top
+    lineSpacing = -2
+
+    # Pega a altura da fonte
+    fontHeight = font.size("Tg")[1]
+
+    while text:
+        i = 1
+        # Determina se a linha inteira cabe na largura
+        if y + fontHeight > rect.bottom:
+            break
+
+        # Tenta encaixar palavra por palavra
+        while font.size(text[:i])[0] < rect.width and i < len(text):
+            i += 1
+
+        # Se o texto não couber, volta para o último espaço
+        if i < len(text): 
+            i = text.rfind(" ", 0, i) + 1
+
+        # Renderiza a linha
+        if bkg:
+            image = font.render(text[:i], 1, color, bkg)
+            image.set_colorkey(bkg)
+        else:
+            image = font.render(text[:i], aa, color)
+
+        screen.blit(image, (rect.left, y))
+        y += fontHeight + lineSpacing
+
+        # Remove o texto já desenhado
+        text = text[i:]
+        
+    return text
+
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((840, 640))
+    
+    config_manager = ConfigManager()
+    
+    # --- INICIALIZAÇÃO SEGURA (Safe Boot) ---
+    # 1. Cria a janela em modo "windowed" primeiro com SCALED (garante que a janela exista)
+    flags = pygame.SCALED 
+    # vsync=1 é importante para suavidade
+    screen = pygame.display.set_mode((840, 640), flags, vsync=1)
+
+    # 2. Se a configuração salva pedir Fullscreen, alternamos agora
+    # Isso evita o travamento de "boot direto" em drivers sensíveis
+    if config_manager.get("fullscreen"):
+        pygame.display.toggle_fullscreen()
+    
     pygame.display.set_caption("PyChess Desktop")
     clock = pygame.time.Clock()
 
@@ -75,6 +132,10 @@ def main():
     engine.start()
     score_manager = ScoreManager()
     sound_manager = SoundManager()
+
+    # Configura som inicial
+    vol_inicial = config_manager.get("volume_master")
+    sound_manager.set_volume(vol_inicial)
     
     # UI Components
     skin_manager = SkinManager() # Escaneia as pastas
@@ -88,16 +149,19 @@ def main():
     # Sliders para Casas Claras (R, G, B) e Escuras (R, G, B)
     sliders_editor = [
         # Claras
-        ColorSlider(250, 150, 200, 15, "R", 240, (200, 50, 50)),
-        ColorSlider(250, 190, 200, 15, "G", 217, (50, 200, 50)),
-        ColorSlider(250, 230, 200, 15, "B", 181, (50, 50, 255)),
+        Slider(250, 150, 200, 15, "R", 240/255, (200, 50, 50), display_mode='val'),
+        Slider(250, 190, 200, 15, "G", 217/255, (50, 200, 50), display_mode='val'),
+        Slider(250, 230, 200, 15, "B", 181/255, (50, 50, 255), display_mode='val'),
         # Escuras
-        ColorSlider(250, 320, 200, 15, "R", 181, (200, 50, 50)),
-        ColorSlider(250, 360, 200, 15, "G", 136, (50, 200, 50)),
-        ColorSlider(250, 400, 200, 15, "B", 99, (50, 50, 255))
+        Slider(250, 320, 200, 15, "R", 181/255, (200, 50, 50), display_mode='val'),
+        Slider(250, 360, 200, 15, "G", 136/255, (50, 200, 50), display_mode='val'),
+        Slider(250, 400, 200, 15, "B", 99/255, (50, 50, 255), display_mode='val')
     ]
     editor_nome_input = TextInput(pygame.font.SysFont("consolas", 24), max_length=15, rect=pygame.Rect(250, 480, 300, 40))
     editor_nome_input.text = "Meu Tema"
+    
+    # Componentes da Tela de Config
+    slider_volume = Slider(270, 200, 300, 20, "Volume Geral", initial_pct=vol_inicial)
     
     # Fontes
     fonte_titulo = pygame.font.SysFont("arial", 40, bold=True)
@@ -105,6 +169,11 @@ def main():
     fonte_small = pygame.font.SysFont("arial", 20)
 
     estado_atual = ESTADO_MENU
+
+    # Variáveis para a tela de Game Over
+    texto_fim_jogo = ""
+    subtexto_fim_jogo = ""
+    cor_fim_jogo = (255, 255, 255)
 
     # Variáveis de controle
     selecionado = None
@@ -130,6 +199,8 @@ def main():
     # Replay/Simulação
     pgn_manager = PGNManager()
     puzzle_manager = PuzzleManager()
+    tutorial_manager = TutorialManager()
+    tutorial_concluido = False # Para mostrar mensagem de sucesso
     puzzle_ativo = False
     puzzle_info = "" # Texto para mostrar na tela (ex: "Mate em 1")
     feedback_puzzle = "" # "Correto!" ou "Tente Novamente"
@@ -141,6 +212,53 @@ def main():
     sim_speed = 1000
     sim_timer = 0
     sim_headers = {}
+
+    # --- Botões do Menu (definidos uma vez) ---
+    btn_x = 480
+    btn_w = 280
+    btn_h = 55
+    spacing = 65
+    start_y = 100
+    btn_novo   = pygame.Rect(btn_x, start_y + 0*spacing, btn_w, btn_h)
+    btn_replay = pygame.Rect(btn_x, start_y + 1*spacing, btn_w, btn_h)
+    btn_puzzle = pygame.Rect(btn_x, start_y + 2*spacing, btn_w, btn_h)
+    btn_tema   = pygame.Rect(btn_x, start_y + 3*spacing, btn_w, btn_h)
+    btn_pont   = pygame.Rect(btn_x, start_y + 4*spacing, btn_w, btn_h)
+    btn_opcoes = pygame.Rect(btn_x, start_y + 5*spacing, btn_w, btn_h)
+    btn_tutorial = pygame.Rect(btn_x, start_y + 6*spacing, btn_w, btn_h) # NOVO
+    btn_som    = pygame.Rect(780, 20, 40, 40)
+
+    def toggle_fullscreen():
+        # 1. Salva o estado atual
+        is_full = not config_manager.get("fullscreen")
+        config_manager.set("fullscreen", is_full)
+        
+        # 2. Define as flags
+        # IMPORTANTE: Sempre usamos SCALED para manter a proporção 840x640
+        flags = pygame.SCALED 
+        if is_full:
+            flags |= pygame.FULLSCREEN
+        
+        # 3. Recria a janela de forma segura
+        try:
+            # Atualiza a variável 'screen' do escopo de main
+            nonlocal screen 
+            
+            # Pequeno delay para o SO processar a mudança anterior se houver spam de F11
+            pygame.time.wait(100) 
+            
+            screen = pygame.display.set_mode((840, 640), flags, vsync=1)
+            
+            # Força um evento de resize para garantir que o conteúdo se ajuste
+            pygame.event.post(pygame.event.Event(pygame.VIDEORESIZE, size=(840, 640), w=840, h=640))
+            
+        except Exception as e:
+            print(f"Erro ao trocar tela: {e}")
+            # Fallback de emergência: volta para janela normal
+            screen = pygame.display.set_mode((840, 640), pygame.SCALED)
+            config_manager.set("fullscreen", False)
+
+        return is_full
 
     while True:
         dt = clock.tick(60)
@@ -166,6 +284,11 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit(); sys.exit()
 
+            # --- ATALHO F11 (Tela Cheia) ---
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_F11:
+                toggle_fullscreen()
+            # -------------------------------
+
             # Atalho Global M para Menu
             if event.type == pygame.KEYDOWN and event.key == pygame.K_m and estado_atual != ESTADO_INPUT_NOME:
                 engine.start()
@@ -176,40 +299,41 @@ def main():
             # --- ESTADO: MENU ---
             if estado_atual == ESTADO_MENU:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    btn_novo = pygame.Rect(260, 250, 320, 50)
-                    btn_pont = pygame.Rect(260, 320, 320, 50)
-                    btn_tema = pygame.Rect(260, 390, 320, 50)
-                    btn_replay = pygame.Rect(260, 460, 320, 50)
-                    btn_som = pygame.Rect(760, 20, 60, 40)
-
                     if btn_novo.collidepoint(event.pos):
                         sound_manager.play('menu')
                         estado_atual = ESTADO_ESCOLHA_COR
-                    elif btn_pont.collidepoint(event.pos):
-                        sound_manager.play('menu')
-                        estado_atual = ESTADO_RANKING
-                    elif btn_tema.collidepoint(event.pos):
-                        sound_manager.play('menu')
-                        estado_atual = ESTADO_TEMA
                     elif btn_replay.collidepoint(event.pos):
                         sound_manager.play('menu')
                         estado_atual = ESTADO_PGN_SELECT
-                    elif btn_som.collidepoint(event.pos):
-                        sound_manager.enabled = not sound_manager.enabled
-                        if sound_manager.enabled: sound_manager.play('menu')
-
-                    btn_puzzle = pygame.Rect(260, 530, 320, 50) # Embaixo dos outros, ajuste o Y se precisar
-                    if btn_puzzle.collidepoint(event.pos):
-                        # INICIAR PUZZLE
+                    elif btn_puzzle.collidepoint(event.pos):
                         p = puzzle_manager.get_random_puzzle()
                         if p:
                             engine.board.set_fen(p['fen'])
-                            # Vira o tabuleiro se for a vez das Pretas jogarem
                             display_board.set_flip(not engine.board.turn)
                             puzzle_info = f"{p['description']} (Rating: {p['rating']})"
                             feedback_puzzle = "Encontre o melhor lance!"
                             estado_atual = ESTADO_PUZZLE
                             sound_manager.play('menu')
+                    elif btn_tema.collidepoint(event.pos):
+                        sound_manager.play('menu')
+                        estado_atual = ESTADO_TEMA
+                    elif btn_pont.collidepoint(event.pos):
+                        sound_manager.play('menu')
+                        estado_atual = ESTADO_RANKING
+                    elif btn_opcoes.collidepoint(event.pos):
+                        sound_manager.play('menu')
+                        estado_atual = ESTADO_CONFIG
+                    elif btn_tutorial.collidepoint(event.pos):
+                        sound_manager.play('menu')
+                        estado_atual = ESTADO_TUTORIAL
+                        lesson = tutorial_manager.get_current_lesson()
+                        if lesson:
+                            engine.board.set_fen(lesson['fen'])
+                            # Força visão das brancas para tutorial
+                            display_board.set_flip(False) 
+                    elif btn_som.collidepoint(event.pos):
+                        sound_manager.enabled = not sound_manager.enabled
+                        if sound_manager.enabled: sound_manager.play('menu')
 
             # --- ESTADO: PGN SELECT ---
             elif estado_atual == ESTADO_PGN_SELECT:
@@ -287,11 +411,11 @@ def main():
                     mx, my = event.pos
                     # Botões do player
                     btns = [
-                        pygame.Rect(670, 220, 30, 30), # <<
-                        pygame.Rect(710, 220, 30, 30), # <
-                        pygame.Rect(750, 220, 40, 30), # Play
-                        pygame.Rect(800, 220, 30, 30), # >
-                        pygame.Rect(840, 220, 30, 30), # >>
+                        pygame.Rect(670, 220, 30, 30), # << (Reset)
+                        pygame.Rect(700, 220, 30, 30), # < (Prev)
+                        pygame.Rect(730, 220, 40, 30), # Play/Pause
+                        pygame.Rect(770, 220, 30, 30), # > (Next)
+                        pygame.Rect(800, 220, 30, 30), # >> (End)
                         pygame.Rect(670, 260, 160, 30) # Speed
                     ]
                     if btns[0].collidepoint(mx, my): # Reset
@@ -353,8 +477,76 @@ def main():
                         if engine.board.turn == chess.WHITE:
                             move = get_best_move(engine.board, dificuldade)
                             if move:
-                                engine.board.push(move)
-                                tocar_som_acao(engine.board, move, sound_manager, acao='move')
+                                realizar_jogada(engine, move, display_board, sound_manager)
+
+            elif estado_atual == ESTADO_TUTORIAL:
+                # Navegação Manual
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    mx, my = event.pos
+                    
+                    # Botões de Navegação (Definidos visualmente abaixo)
+                    btn_prev = pygame.Rect(670, 550, 40, 40)
+                    btn_next = pygame.Rect(720, 550, 40, 40)
+                    btn_menu = pygame.Rect(770, 550, 40, 40)
+                    
+                    if btn_menu.collidepoint(mx, my):
+                        estado_atual = ESTADO_MENU
+                        sound_manager.play('menu')
+                    elif btn_next.collidepoint(mx, my):
+                        l = tutorial_manager.next_lesson()
+                        if l: 
+                            engine.board.set_fen(l['fen'])
+                            tutorial_concluido = False
+                        sound_manager.play('move')
+                    elif btn_prev.collidepoint(mx, my):
+                        l = tutorial_manager.prev_lesson()
+                        if l: 
+                            engine.board.set_fen(l['fen'])
+                            tutorial_concluido = False
+                        sound_manager.play('move')
+
+                    # Lógica de Movimento (Similar ao Puzzle)
+                    if mx < 640 and not tutorial_concluido:
+                        c = mx // 80
+                        r = my // 80
+                        if display_board.is_flipped: c, r = 7-c, 7-r
+                        if 0 <= c <= 7 and 0 <= r <= 7:
+                            square = chess.square(c, 7 - r)
+                            
+                            if selecionado is None:
+                                p = engine.board.piece_at(square)
+                                if p and p.color == engine.board.turn:
+                                    selecionado = square
+                                    sound_manager.play('move')
+                            else:
+                                move = chess.Move(selecionado, square)
+                                # Promoção automática para Rainha em puzzles para simplificar
+                                piece = engine.board.piece_at(selecionado)
+                                if piece and piece.piece_type == chess.PAWN and chess.square_rank(square) in [0, 7]:
+                                    move.promotion = chess.QUEEN
+
+                                if move in engine.board.legal_moves:
+                                   # A função check_move deve retornar um booleano simples.
+                                   # Se retornasse uma tupla (ex: (True, False)), `if (True, False)` em Python é True.
+                                   # Garantimos que estamos checando o resultado booleano.
+                                   is_correct = tutorial_manager.check_move(move)
+                                   if isinstance(is_correct, tuple): # Medida de segurança se a função retornar tupla
+                                       is_correct = is_correct[0]
+
+                                   if is_correct:
+                                       realizar_jogada(engine, move, display_board, sound_manager)
+                                       tutorial_concluido = True
+                                       sound_manager.play('game_over') # Sucesso
+                                   else:
+                                       sound_manager.play('defeat') # Errou o que o tutorial pediu
+                                       selecionado = None # Deseleciona
+                                else:
+                                    p = engine.board.piece_at(square)
+                                    if p and p.color == engine.board.turn: # Clicar em outra peça sua
+                                        selecionado = square
+                                        sound_manager.play('move')
+                                    else:
+                                        selecionado = None # Clicar em casa vazia ou peça inimiga
 
             elif estado_atual == ESTADO_TEMA:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -381,9 +573,18 @@ def main():
                     # Botão Abrir Pasta (Quality of Life)
                     btn_folder = pygame.Rect(220, 550, 190, 40)
                     if btn_folder.collidepoint(event.pos):
-                        import os
-                        # Abre o explorer do Windows/Linux
-                        os.startfile(skin_manager.base_folder)
+                        folder_path = skin_manager.base_folder
+                        try:
+                            if sys.platform == "win32":
+                                os.startfile(folder_path)
+                            elif sys.platform == "darwin":
+                                subprocess.run(["open", folder_path])
+                            else: # linux
+                                subprocess.run(["xdg-open", folder_path])
+                        except FileNotFoundError:
+                            print(f"Could not open folder '{folder_path}'. Command not found.")
+                        except Exception as e:
+                            print(f"Error opening folder: {e}")
 
                     # Adicione um botão "CRIAR NOVO"
                     btn_criar = pygame.Rect(630, 550, 150, 40)
@@ -402,8 +603,8 @@ def main():
                     
                     if btn_salvar.collidepoint(event.pos):
                         # Pega valores
-                        l_rgb = (sliders_editor[0].val, sliders_editor[1].val, sliders_editor[2].val)
-                        d_rgb = (sliders_editor[3].val, sliders_editor[4].val, sliders_editor[5].val)
+                        l_rgb = (int(sliders_editor[0].pct*255), int(sliders_editor[1].pct*255), int(sliders_editor[2].pct*255))
+                        d_rgb = (int(sliders_editor[3].pct*255), int(sliders_editor[4].pct*255), int(sliders_editor[5].pct*255))
                         nome = editor_nome_input.text
                         
                         # Salva
@@ -417,6 +618,35 @@ def main():
                         
                     elif btn_cancelar.collidepoint(event.pos):
                         estado_atual = ESTADO_TEMA
+                        sound_manager.play('menu')
+
+            # --- ESTADO: CONFIGURAÇÕES ---
+            elif estado_atual == ESTADO_CONFIG:
+                # Slider
+                if slider_volume.handle_event(event):
+                    # Se mexeu no slider, atualiza volume em tempo real
+                    new_vol = slider_volume.pct
+                    config_manager.set("volume_master", new_vol)
+                    sound_manager.set_volume(new_vol) # Implementar no SoundManager depois
+                
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    # Checkbox Fullscreen (Simulado com rect)
+                    chk_full_rect = pygame.Rect(270, 280, 30, 30)
+                    if chk_full_rect.collidepoint(event.pos):
+                        toggle_fullscreen() # Usa a função unificada
+                        sound_manager.play('menu')
+
+                    # Checkbox AUTO-SAVE (NOVO)
+                    chk_save_rect = pygame.Rect(270, 330, 30, 30) # Um pouco abaixo do fullscreen
+                    if chk_save_rect.collidepoint(event.pos):
+                        val = not config_manager.get("auto_save")
+                        config_manager.set("auto_save", val)
+                        sound_manager.play('menu')
+
+                    # Botão Voltar
+                    btn_voltar = pygame.Rect(320, 550, 200, 40)
+                    if btn_voltar.collidepoint(event.pos):
+                        estado_atual = ESTADO_MENU
                         sound_manager.play('menu')
 
             # --- ESTADO: JOGANDO ---
@@ -507,6 +737,21 @@ def main():
                                     else:
                                         selecionado = None
 
+            # --- ESTADO: GAME OVER (NOVO) ---
+            elif estado_atual == ESTADO_GAME_OVER:
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    # Botão Continuar
+                    btn_cont = pygame.Rect(320, 400, 200, 50)
+                    if btn_cont.collidepoint(event.pos):
+                        sound_manager.play('menu')
+                        # Agora sim verifica se é Highscore
+                        if score_manager.check_is_highscore(pontuacao_final):
+                            input_nome.text = ""
+                            input_nome.active = True
+                            estado_atual = ESTADO_INPUT_NOME
+                        else:
+                            estado_atual = ESTADO_RANKING
+
             # --- ESTADO: INPUT NOME ---
             elif estado_atual == ESTADO_INPUT_NOME:
                 res = input_nome.handle_event(event)
@@ -548,7 +793,8 @@ def main():
                             else:
                                 move = chess.Move(selecionado, square)
                                 # Promoção automática para Rainha em puzzles para simplificar
-                                if engine.board.piece_at(selecionado).piece_type == chess.PAWN and chess.square_rank(square) in [0, 7]:
+                                piece = engine.board.piece_at(selecionado)
+                                if piece and piece.piece_type == chess.PAWN and chess.square_rank(square) in [0, 7]:
                                     move.promotion = chess.QUEEN
 
                                 if move in engine.board.legal_moves:
@@ -588,20 +834,64 @@ def main():
                 aguardando_ia = False
 
         # --- CHECAGEM DE FIM DE JOGO ---
+        # --- CHECAGEM DE FIM DE JOGO ---
         if estado_atual == ESTADO_JOGANDO and engine.is_game_over():
             engine.stop()
             v = engine.get_winner()
-            eh_vitoria = (v == ('white' if jogador_brancas else 'black'))
-            score_manager.update_stats('win' if eh_vitoria else ('loss' if v != 'draw' else 'draw'))
-            pontuacao_final = score_manager.calcular_pontuacao(eh_vitoria, calcular_material(engine.board, jogador_brancas), engine.get_game_duration())
-            if eh_vitoria: sound_manager.play('game_over')
-            else: sound_manager.play('defeat')
             
-            if score_manager.check_is_highscore(pontuacao_final):
-                input_nome.text = ""; input_nome.active = True
-                estado_atual = ESTADO_INPUT_NOME
+            # Lógica para definir resultado
+            cor_jogador = 'white' if jogador_brancas else 'black'
+            
+            resultado_tipo = 'loss' # Padrão
+            if v == 'draw':
+                resultado_tipo = 'draw'
+            elif v == cor_jogador:
+                resultado_tipo = 'win'
+            
+            # Atualiza Stats
+            score_manager.update_stats(resultado_tipo)
+            
+            # Define Textos para a tela de Game Over
+            if resultado_tipo == 'win':
+                texto_fim_jogo = "VITÓRIA!"
+                cor_fim_jogo = (50, 200, 50)
+                sound_manager.play('game_over')
+            elif resultado_tipo == 'draw':
+                texto_fim_jogo = "EMPATE"
+                cor_fim_jogo = (100, 100, 200)
+                sound_manager.play('game_over') # Ou um som neutro
             else:
-                estado_atual = ESTADO_RANKING
+                texto_fim_jogo = "DERROTA"
+                cor_fim_jogo = (200, 50, 50)
+                sound_manager.play('defeat')
+
+            # Define Subtexto (Motivo)
+            if engine.winner_on_time: subtexto_fim_jogo = "Tempo Esgotado"
+            elif engine.board.is_checkmate(): subtexto_fim_jogo = "Xeque-mate"
+            elif engine.board.is_stalemate(): subtexto_fim_jogo = "Afogamento"
+            else: subtexto_fim_jogo = "Fim de Partida"
+
+            # --- CÁLCULO DA PONTUAÇÃO (ATUALIZADO) ---
+            pontuacao_final = score_manager.calcular_pontuacao(
+                resultado_tipo, 
+                calcular_material(engine.board, jogador_brancas), 
+                engine.get_game_duration(),
+                dificuldade
+            )
+            # -----------------------------------------
+
+            # Auto-Save (Lógica existente)
+            if config_manager.get("auto_save"):
+                nome_arquivo = pgn_manager.save_game(
+                    engine.board, 
+                    "Jogador" if jogador_brancas else "Computador",
+                    "Computador" if jogador_brancas else "Jogador",
+                    engine.board.result()
+                )
+                aviso_texto = "PGN Salvo Automaticamente!"
+                aviso_timer = pygame.time.get_ticks() + 3000
+
+            estado_atual = ESTADO_GAME_OVER
 
         # -------------------------------------------------
         # --- RENDERIZAÇÃO (DESENHO) ---
@@ -609,38 +899,118 @@ def main():
         screen.fill((40, 40, 40))
 
         if estado_atual == ESTADO_MENU:
-            lbl = fonte_titulo.render("PyChess Desktop", True, (255,255,255))
-            screen.blit(lbl, (840//2 - lbl.get_width()//2, 120))
+            mouse_pos = pygame.mouse.get_pos()
+            # 1. Fundo Decorativo (Padrão de Xadrez Sutil)
+            screen.fill((20, 20, 25)) # Fundo quase preto
             
-            # Botões
-            btn_novo = pygame.Rect(260, 250, 320, 50)
-            btn_pont = pygame.Rect(260, 320, 320, 50)
-            btn_tema = pygame.Rect(260, 390, 320, 50)
-            btn_replay = pygame.Rect(260, 460, 320, 50)
-            btn_som = pygame.Rect(760, 20, 60, 40)
+            # Desenha quadrados grandes sutis no fundo
+            bg_tile_size = 120
+            for y in range(0, 640, bg_tile_size):
+                for x in range(0, 840, bg_tile_size):
+                    if (x // bg_tile_size + y // bg_tile_size) % 2 == 0:
+                        pygame.draw.rect(screen, (30, 30, 35), (x, y, bg_tile_size, bg_tile_size))
             
-            for btn, txt in [(btn_novo, "Novo Jogo"), (btn_pont, "Pontuações"), (btn_tema, "Temas"), (btn_replay, "Replay")]:
-                pygame.draw.rect(screen, (70, 130, 180), btn, border_radius=12)
-                pygame.draw.rect(screen, (200, 200, 200), btn, 2, border_radius=12)
-                lbl = fonte_btn.render(txt, True, (255,255,255))
-                screen.blit(lbl, (btn.centerx - lbl.get_width()//2, btn.centery - lbl.get_height()//2))
+            # 2. Efeito de Vinheta (Escurece as bordas)
+            # Opcional, mas dá um toque de cinema
+            # (Se ficar pesado, pode remover)
+            
+            # 3. Lado Esquerdo: Identidade do Jogo
+            # Desenha uma peça decorativa grande (Rei)
+            img_decor = display_board.images.get((chess.KING, chess.WHITE))
+            if img_decor:
+                # Aumenta a imagem para enfeite
+                img_big = pygame.transform.smoothscale(img_decor, (200, 200))
+                # Desenha com transparência (alpha)
+                img_big.set_alpha(50) 
+                screen.blit(img_big, (100, 250))
 
-            btn_puzzle = pygame.Rect(260, 530, 320, 50) # Embaixo dos outros, ajuste o Y se precisar
-            pygame.draw.rect(screen, (150, 100, 200), btn_puzzle, border_radius=12) # Roxo
-            pygame.draw.rect(screen, (200, 200, 200), btn_puzzle, 2, border_radius=12)
-            lbl_puzz = fonte_btn.render("Treino Tático", True, (255,255,255))
-            screen.blit(lbl_puzz, (btn_puzzle.centerx - lbl_puzz.get_width()//2, btn_puzzle.centery - lbl_puzz.get_height()//2))
+            # Título Principal
+            fonte_logo = pygame.font.SysFont("segoe ui", 70, bold=True)
+            fonte_sub = pygame.font.SysFont("segoe ui", 24)
             
-            # Som
-            cor = (100,200,100) if sound_manager.enabled else (200,100,100)
-            pygame.draw.rect(screen, cor, btn_som, border_radius=5)
-            screen.blit(fonte_small.render("SOM", True, (255,255,255)), (btn_som.x+10, btn_som.y+10))
+            # Sombra do texto
+            txt_sombra = fonte_logo.render("PyChess", True, (0, 0, 0))
+            screen.blit(txt_sombra, (83, 103))
             
-            # Stats
+            txt_logo = fonte_logo.render("PyChess", True, (220, 220, 220))
+            screen.blit(txt_logo, (80, 100))
+            
+            txt_desc = fonte_sub.render("Desktop Edition", True, (100, 200, 100)) # Verde suave
+            screen.blit(txt_desc, (85, 170))
+
+            # 4. Lado Direito: Botões Modernos
+            # Lista de botões com suas ações/textos
+            # (Note que a lógica de clique continua no loop de eventos, aqui é só visual)
+            # Precisamos garantir que as posições visuais batam com as do evento de clique.
+            
+            start_y = 100
+            spacing = 65
+            
+            botoes_info = [
+                (btn_novo, "Novo Jogo", (60, 120, 180)),   # Azul
+                (btn_replay, "Replay / PGN", (100, 60, 140)), # Roxo
+                (btn_puzzle, "Treino Tático", (180, 100, 60)),# Laranja
+                (btn_tema, "Temas", (80, 80, 80)),         # Cinza
+                (btn_pont, "Pontuações", (80, 80, 80)),    # Cinza
+                (btn_opcoes, "Opções", (60, 60, 60)),       # Escuro
+                (btn_tutorial, "Aprender", (60, 140, 60)) # Verde
+            ]
+            
+            for i, (rect, texto, cor_base) in enumerate(botoes_info):
+                # Atualiza a posição do Rect para o novo layout (Alinha à direita)
+                rect.x = btn_x
+                rect.y = start_y + (i * spacing)
+                rect.width = btn_w
+                rect.height = btn_h
+                
+                # Efeito Hover
+                is_hover = rect.collidepoint(mouse_pos)
+                
+                if is_hover:
+                    # Clareia a cor
+                    cor_final = (min(255, cor_base[0]+30), min(255, cor_base[1]+30), min(255, cor_base[2]+30))
+                    # Deslocamento visual (botão "sobe" 2 pixels)
+                    draw_rect = pygame.Rect(rect.x, rect.y - 2, rect.width, rect.height)
+                    # Sombra
+                    pygame.draw.rect(screen, (0,0,0), (rect.x+2, rect.y+5, rect.width, rect.height), border_radius=12)
+                else:
+                    cor_final = cor_base
+                    draw_rect = rect
+                
+                # Desenha Botão
+                pygame.draw.rect(screen, cor_final, draw_rect, border_radius=12)
+                pygame.draw.rect(screen, (255, 255, 255), draw_rect, 1, border_radius=12) # Borda fina branca
+                
+                # Texto do Botão
+                txt_surf = fonte_btn.render(texto, True, (255, 255, 255))
+                screen.blit(txt_surf, (draw_rect.centerx - txt_surf.get_width()//2, draw_rect.centery - txt_surf.get_height()//2))
+
+            # 5. Botão de Som (Discreto no canto)
+            # btn_som (já definido no loop de eventos)
+            btn_som.x = 780
+            btn_som.y = 20
+            icon_color = (100, 255, 100) if sound_manager.enabled else (255, 100, 100)
+            pygame.draw.circle(screen, (40, 40, 40), btn_som.center, 20) # Fundo circular
+            pygame.draw.circle(screen, icon_color, btn_som.center, 20, 2) # Borda
+            
+            txt_som = fonte_small.render("S" if sound_manager.enabled else "X", True, icon_color)
+            screen.blit(txt_som, (btn_som.centerx - txt_som.get_width()//2, btn_som.centery - txt_som.get_height()//2))
+
+            # 6. Rodapé (Stats)
             s = score_manager.load_stats()
             rate = score_manager.get_win_rate()
-            msg = f"V: {s['wins']}  D: {s['losses']}  E: {s['draws']} ({rate:.1f}%)"
-            screen.blit(fonte_small.render(msg, True, (150,150,150)), (280, 530))
+            msg = f"Partidas: {s['games_played']}  |  Vitórias: {s['wins']}  |  Win Rate: {rate:.1f}%"
+            
+            # Barra de status inferior
+            pygame.draw.rect(screen, (20, 20, 20), (0, 610, 840, 30))
+            pygame.draw.line(screen, (50, 50, 50), (0, 610), (840, 610))
+            
+            txt_stats = fonte_small.render(msg, True, (100, 100, 100))
+            screen.blit(txt_stats, (10, 615))
+            
+            # Versão
+            txt_ver = fonte_small.render("v1.0.0", True, (60, 60, 60))
+            screen.blit(txt_ver, (780, 615))
 
         elif estado_atual == ESTADO_PGN_SELECT:
             lbl = fonte_titulo.render("Selecione uma Partida", True, (255,255,255))
@@ -669,12 +1039,65 @@ def main():
             lbl = fonte_btn.render("Voltar", True, (255,255,255))
             screen.blit(lbl, (btn_voltar.centerx - lbl.get_width()//2, btn_voltar.y+5))
 
+        elif estado_atual == ESTADO_TUTORIAL:
+            display_board.draw(engine.board)
+            
+            lesson = tutorial_manager.get_current_lesson()
+            
+            # Desenha seta de instrução
+            arrow_move = tutorial_manager.get_arrow_move()
+            if arrow_move and not tutorial_concluido:
+                display_board.draw_arrow(arrow_move, color=(0, 200, 255), width=8)
+
+            # Painel Lateral
+            painel_rect = pygame.Rect(660, 0, 180, 640)
+            pygame.draw.rect(screen, (40, 40, 45), painel_rect) # Fundo escuro suave
+            
+            if lesson:
+                # Título
+                lbl_title = fonte_btn.render(lesson['title'], True, (255, 215, 0))
+                # Centraliza o título
+                screen.blit(lbl_title, (660 + (180 - lbl_title.get_width())//2, 30))
+                
+                # Texto Explicativo com Quebra de Linha
+                fonte_tutorial = pygame.font.SysFont("arial", 18) # Fonte levemente menor para leitura
+                texto_completo = " ".join(lesson['text']) # Junta as linhas do JSON num texto só
+                
+                # Define a área onde o texto pode aparecer
+                area_texto = pygame.Rect(670, 80, 160, 400) # x=670 (margem), w=160 (largura útil)
+                
+                desenhar_texto_quebrado(screen, texto_completo, (220, 220, 220), area_texto, fonte_tutorial)
+                
+                # Status
+                if tutorial_concluido:
+                    pygame.draw.rect(screen, (50, 150, 50), (670, 450, 160, 40), border_radius=8)
+                    lbl_ok = fonte_small.render("Muito Bem!", True, WHITE)
+                    screen.blit(lbl_ok, (670 + (160 - lbl_ok.get_width())//2, 460))
+                    
+                    lbl_next = pygame.font.SysFont("arial", 14).render("Clique > para avançar", True, (150, 255, 150))
+                    screen.blit(lbl_next, (670 + (160 - lbl_next.get_width())//2, 500))
+
+            # Botões de Navegação
+            btn_prev = pygame.Rect(670, 550, 40, 40)
+            btn_next = pygame.Rect(720, 550, 40, 40)
+            btn_menu = pygame.Rect(770, 550, 40, 40)
+            
+            # Cores dos botões
+            pygame.draw.rect(screen, (80, 80, 100), btn_prev, border_radius=8)
+            pygame.draw.rect(screen, (80, 120, 80), btn_next, border_radius=8) # Verde para o Próximo
+            pygame.draw.rect(screen, (120, 60, 60), btn_menu, border_radius=8) # Vermelho para Sair
+            
+            # Ícones
+            screen.blit(fonte_btn.render("<", True, WHITE), (btn_prev.centerx-8, btn_prev.centery-12))
+            screen.blit(fonte_btn.render(">", True, WHITE), (btn_next.centerx-8, btn_next.centery-12))
+            screen.blit(fonte_small.render("X", True, WHITE), (btn_menu.centerx-6, btn_menu.centery-10))
+            
         elif estado_atual == ESTADO_SIMULACAO:
             display_board.draw(engine.board)
             # Desenha seta do movimento atual do replay
             if sim_index > 0 and sim_index <= len(sim_moves):
                 move = sim_moves[sim_index-1]
-                display_board.draw_arrow(move.from_square, move.to_square, color=(255,140,0,180), width=12)
+                display_board.draw_arrow(move, color=(255,140,0,180), width=12)
             eval_bar.draw(screen)
             
             # Painel Lateral de Simulação
@@ -690,9 +1113,9 @@ def main():
             
             # Botões Player
             bts = [
-                ("<<", 670, 220), ("<", 710, 220),
-                ("||" if sim_auto else ">", 750, 220),
-                (">", 800, 220), (">>", 840, 220)
+                ("<<", 670, 220), ("<", 700, 220),
+                ("||" if sim_auto else ">", 730, 220),
+                (">", 770, 220), (">>", 800, 220)
             ]
             for txt, bx, by in bts:
                 cor = (80, 180, 80) if txt=="||" else (80, 80, 120)
@@ -758,8 +1181,8 @@ def main():
             screen.blit(lbl, (280, 30))
             
             # Recupera cores atuais dos sliders para preview
-            cor_clara = (sliders_editor[0].val, sliders_editor[1].val, sliders_editor[2].val)
-            cor_escura = (sliders_editor[3].val, sliders_editor[4].val, sliders_editor[5].val)
+            cor_clara = (int(sliders_editor[0].pct*255), int(sliders_editor[1].pct*255), int(sliders_editor[2].pct*255))
+            cor_escura = (int(sliders_editor[3].pct*255), int(sliders_editor[4].pct*255), int(sliders_editor[5].pct*255))
             
             # Preview (Desenha um mini tabuleiro 2x2)
             prev_rect = pygame.Rect(550, 150, 200, 200)
@@ -795,6 +1218,74 @@ def main():
             pygame.draw.rect(screen, (200, 50, 50), btn_cancelar, border_radius=10)
             lc = fonte_btn.render("Cancelar", True, WHITE)
             screen.blit(lc, (btn_cancelar.centerx - lc.get_width()//2, btn_cancelar.centery - lc.get_height()//2))
+
+        elif estado_atual == ESTADO_CONFIG:
+            screen.fill((35, 35, 40))
+            lbl = fonte_titulo.render("Opções", True, WHITE)
+            screen.blit(lbl, (840//2 - lbl.get_width()//2, 50))
+            
+            # Slider Volume
+            slider_volume.draw(screen, fonte_small)
+            
+            # Checkbox Fullscreen
+            is_full = config_manager.get("fullscreen")
+            chk_rect = pygame.Rect(270, 280, 30, 30)
+            pygame.draw.rect(screen, (80, 80, 80), chk_rect, border_radius=5)
+            if is_full:
+                pygame.draw.rect(screen, (100, 200, 100), chk_rect.inflate(-6, -6), border_radius=3)
+            
+            lbl_full = fonte_btn.render("Tela Cheia", True, WHITE)
+            screen.blit(lbl_full, (320, 280))
+            
+            # Checkbox AUTO-SAVE (NOVO)
+            is_auto = config_manager.get("auto_save")
+            chk_save_rect = pygame.Rect(270, 330, 30, 30)
+            pygame.draw.rect(screen, (80, 80, 80), chk_save_rect, border_radius=5)
+            if is_auto:
+                pygame.draw.rect(screen, (100, 200, 100), chk_save_rect.inflate(-6, -6), border_radius=3)
+            
+            lbl_save = fonte_btn.render("Gravar PGN Auto", True, WHITE)
+            screen.blit(lbl_save, (320, 330))
+            
+            # Botão Voltar
+            btn_voltar = pygame.Rect(320, 550, 200, 40)
+            pygame.draw.rect(screen, (150, 50, 50), btn_voltar, border_radius=8)
+            l = fonte_btn.render("Voltar", True, WHITE)
+            screen.blit(l, (btn_voltar.centerx - l.get_width()//2, btn_voltar.y+5))
+
+        elif estado_atual == ESTADO_GAME_OVER:
+            # 1. Desenha o jogo no fundo (congelado) para contexto
+            display_board.draw(engine.board)
+            
+            # 2. Camada escura semi-transparente (Overlay)
+            overlay = pygame.Surface((840, 640))
+            overlay.set_alpha(180)
+            overlay.fill((0, 0, 0))
+            screen.blit(overlay, (0, 0))
+            
+            # 3. Caixa de Mensagem
+            box_rect = pygame.Rect(220, 150, 400, 350)
+            pygame.draw.rect(screen, (40, 40, 45), box_rect, border_radius=20)
+            pygame.draw.rect(screen, cor_fim_jogo, box_rect, 4, border_radius=20) # Borda colorida (Verde/Vermelha)
+            
+            # Texto Principal (VITÓRIA/DERROTA)
+            txt_big = pygame.font.SysFont("arial", 60, bold=True).render(texto_fim_jogo, True, cor_fim_jogo)
+            screen.blit(txt_big, (box_rect.centerx - txt_big.get_width()//2, box_rect.y + 50))
+            
+            # Subtexto (Motivo)
+            txt_sub = fonte_btn.render(subtexto_fim_jogo, True, (200, 200, 200))
+            screen.blit(txt_sub, (box_rect.centerx - txt_sub.get_width()//2, box_rect.y + 130))
+            
+            # Pontuação Final
+            if pontuacao_final > 0:
+                txt_pts = fonte_btn.render(f"Pontuação: {pontuacao_final}", True, (255, 215, 0)) # Dourado
+                screen.blit(txt_pts, (box_rect.centerx - txt_pts.get_width()//2, box_rect.y + 180))
+            
+            # Botão Continuar
+            btn_cont = pygame.Rect(320, 400, 200, 50)
+            pygame.draw.rect(screen, cor_fim_jogo, btn_cont, border_radius=10)
+            lbl_cont = fonte_btn.render("Continuar", True, (255, 255, 255))
+            screen.blit(lbl_cont, (btn_cont.centerx - lbl_cont.get_width()//2, btn_cont.centery - lbl_cont.get_height()//2))
 
         elif estado_atual == ESTADO_ESCOLHA_COR:
             # Configuração
@@ -880,7 +1371,7 @@ def main():
                 screen.blit(fonte_small.render(ultima_dica_ia.replace("Dica: ",""), True, (200,200,200)), (670, 230))
                 # Desenha seta de dica
                 if ultima_dica_move:
-                    display_board.draw_arrow(ultima_dica_move.from_square, ultima_dica_move.to_square, color=(0,180,255,160), width=10)
+                    display_board.draw_arrow(ultima_dica_move, color=(0,180,255,160), width=10)
                     # Limpa a dica se sair do estado jogando
                     if estado_atual != ESTADO_JOGANDO:
                         ultima_dica_move = None

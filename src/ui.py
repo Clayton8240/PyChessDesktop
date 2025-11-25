@@ -225,30 +225,49 @@ class DisplayBoard:
         if self.active_animation:
             self.active_animation.draw(self.screen)
     
-    def draw_arrow(self, move, color=(0, 255, 0)):
+    def draw_arrow(self, move, color=(0, 255, 0), width=6):
+        """Desenha uma seta direcional sobre o tabuleiro."""
         start_sq = move.from_square
         end_sq = move.to_square
         
+        # 1. Calcula coordenadas lógicas
         c1 = chess.square_file(start_sq)
         r1 = 7 - chess.square_rank(start_sq)
         c2 = chess.square_file(end_sq)
         r2 = 7 - chess.square_rank(end_sq)
         
+        # 2. Aplica Flip (se necessário)
         if self.is_flipped:
             c1, r1 = 7-c1, 7-r1
             c2, r2 = 7-c2, 7-r2
             
+        # 3. Converte para Pixels (Centro da casa)
         offset = self.sq_size // 2
-        start = (c1 * self.sq_size + offset, r1 * self.sq_size + offset)
-        end = (c2 * self.sq_size + offset, r2 * self.sq_size + offset)
+        start_pos = (c1 * self.sq_size + offset, r1 * self.sq_size + offset)
+        end_pos = (c2 * self.sq_size + offset, r2 * self.sq_size + offset)
         
-        pygame.draw.line(self.screen, color, start, end, 6)
+        # 4. Desenha a Linha (Corpo da seta)
+        pygame.draw.line(self.screen, color, start_pos, end_pos, width)
         
-        rotation = math.atan2(start[1] - end[1], end[0] - start[0]) + math.pi/2
-        rad = 20
-        p1 = (end[0] + rad * math.sin(rotation - math.pi/6), end[1] + rad * math.cos(rotation - math.pi/6))
-        p2 = (end[0] + rad * math.sin(rotation + math.pi/6), end[1] + rad * math.cos(rotation + math.pi/6))
-        pygame.draw.polygon(self.screen, color, [end, p1, p2])
+        # 5. Desenha a Ponta (Triângulo)
+        # Calcula o ângulo da linha (em radianos)
+        # dx = x2 - x1, dy = y2 - y1
+        angle = math.atan2(end_pos[1] - start_pos[1], end_pos[0] - start_pos[0])
+        
+        arrow_size = 25 # Tamanho da ponta
+        arrow_angle = math.pi / 6 # 30 graus de abertura
+        
+        # Pontos da base do triângulo (calculados retrocedendo a partir do destino)
+        # Asa Esquerda
+        p1_x = end_pos[0] - arrow_size * math.cos(angle - arrow_angle)
+        p1_y = end_pos[1] - arrow_size * math.sin(angle - arrow_angle)
+        
+        # Asa Direita
+        p2_x = end_pos[0] - arrow_size * math.cos(angle + arrow_angle)
+        p2_y = end_pos[1] - arrow_size * math.sin(angle + arrow_angle)
+        
+        # Desenha o triângulo preenchido
+        pygame.draw.polygon(self.screen, color, [end_pos, (p1_x, p1_y), (p2_x, p2_y)])
 
     def draw_valid_moves(self, board, selected_square):
         if selected_square is None:
@@ -306,38 +325,47 @@ class DisplayBoard:
         self.active_animation = PieceAnimation(start_pos, end_pos, img)
         self.animating_dest_square = move.to_square
 
-class ColorSlider:
-    def __init__(self, x, y, w, h, label, initial_val=128, color_bar=(200, 50, 50)):
+class Slider:
+    def __init__(self, x, y, w, h, label, initial_pct=0.5, color_bar=(100, 200, 100), display_mode='pct'):
         self.rect = pygame.Rect(x, y, w, h)
-        self.val = initial_val # 0 a 255
+        self.pct = initial_pct # 0.0 a 1.0
         self.label = label
         self.dragging = False
         self.color_bar = color_bar
+        self.display_mode = display_mode
 
     def handle_event(self, event):
+        updated = False
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.inflate(10, 10).collidepoint(event.pos):
                 self.dragging = True
                 self.update_from_mouse(event.pos[0])
+                updated = True
         elif event.type == pygame.MOUSEBUTTONUP:
             self.dragging = False
         elif event.type == pygame.MOUSEMOTION and self.dragging:
             self.update_from_mouse(event.pos[0])
+            updated = True
+        return updated
 
     def update_from_mouse(self, mouse_x):
         rel_x = mouse_x - self.rect.x
-        percent = max(0.0, min(1.0, rel_x / self.rect.width))
-        self.val = int(percent * 255)
+        self.pct = max(0.0, min(1.0, rel_x / self.rect.width))
 
     def draw(self, screen, font):
-        # Fundo da barra
+        # Fundo
         pygame.draw.rect(screen, (60, 60, 60), self.rect, border_radius=5)
-        # Parte preenchida
-        fill_w = int((self.val / 255) * self.rect.width)
+        # Preenchimento
+        fill_w = int(self.pct * self.rect.width)
         fill_rect = pygame.Rect(self.rect.x, self.rect.y, fill_w, self.rect.height)
         pygame.draw.rect(screen, self.color_bar, fill_rect, border_radius=5)
-        # Knob (Bolinha)
-        pygame.draw.circle(screen, (255, 255, 255), (self.rect.x + fill_w, self.rect.centery), self.rect.height)
+        # Bolinha
+        pygame.draw.circle(screen, (255, 255, 255), (self.rect.x + fill_w, self.rect.centery), self.rect.height + 2)
+        
         # Texto
-        lbl = font.render(f"{self.label}: {self.val}", True, (200, 200, 200))
-        screen.blit(lbl, (self.rect.x + self.rect.width + 15, self.rect.y - 2))
+        if self.display_mode == 'pct':
+            text = f"{self.label}: {int(self.pct * 100)}%"
+        else: # 'val' for 0-255
+            text = f"{self.label}: {int(self.pct * 255)}"
+        lbl = font.render(text, True, (220, 220, 220))
+        screen.blit(lbl, (self.rect.x, self.rect.y - 25))

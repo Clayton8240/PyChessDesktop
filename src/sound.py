@@ -33,3 +33,9 @@ class SoundManager:
     def play(self, sound_name):
         if self.enabled and sound_name in self.sounds:
             self.sounds[sound_name].play()
+
+    def set_volume(self, volume):
+        """Volume de 0.0 a 1.0"""
+        self.volume = max(0.0, min(1.0, volume))
+        for sound in self.sounds.values():
+            sound.set_volume(self.volume)

@@ -1,0 +1,57 @@
+[
+    {
+        "title": "A Torre",
+        "text": [
+            "A Torre move-se em linhas retas,",
+            "tanto na horizontal quanto na vertical.",
+            "Tente capturar o peão preto."
+        ],
+        "fen": "8/8/8/4p3/8/4R3/8/8 w - - 0 1",
+        "expected_move": "e3e5",
+        "arrow": ["e3", "e5"]
+    },
+    {
+        "title": "O Bispo",
+        "text": [
+            "O Bispo move-se apenas nas diagonais.",
+            "Ele nunca muda a cor da casa onde começou.",
+            "Mova o bispo para h8."
+        ],
+        "fen": "8/8/8/8/4B3/8/8/8 w - - 0 1",
+        "expected_move": "e4h7",
+        "arrow": ["e4", "h7"]
+    },
+    {
+        "title": "Roque (Regra Especial)",
+        "text": [
+            "Se o Rei e a Torre não se moveram,",
+            "e não há peças entre eles, você pode fazer o Roque.",
+            "Mova o Rei duas casas para o lado."
+        ],
+        "fen": "r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQkq - 0 1",
+        "expected_move": "e1g1",
+        "arrow": ["e1", "g1"]
+    },
+    {
+        "title": "En Passant (Captura Especial)",
+        "text": [
+            "Se um peão avança duas casas e para ao lado",
+            "do seu, você pode capturá-lo como se ele",
+            "tivesse andado apenas uma. Tente!"
+        ],
+        "fen": "rnbqkbnr/pp1ppppp/8/2pP4/8/8/PPP1PPPP/RNBQKBNR w KQkq c6 0 3",
+        "expected_move": "d5c6",
+        "arrow": ["d5", "c6"]
+    },
+    {
+        "title": "O Cavalo",
+        "text": [
+            "O Cavalo é a única peça que pode pular sobre as outras.",
+            "Ele se move em 'L': duas casas em uma direção e uma para o lado.",
+            "Capture o peão para completar."
+        ],
+        "fen": "8/8/8/6p1/4N3/8/8/8 w - - 0 1",
+        "expected_move": "e4g5",
+        "arrow": ["e4", "g5"]
+    }
+]
