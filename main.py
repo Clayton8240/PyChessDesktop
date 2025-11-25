@@ -14,6 +14,7 @@ from src.sound import SoundManager
 from src.pgn_manager import PGNManager
 from src.puzzle_manager import PuzzleManager
 from src.skin_manager import SkinManager
+
 from src.config_manager import ConfigManager
 from src.tutorial_manager import TutorialManager
 
@@ -1376,6 +1377,7 @@ def main():
                 ("Ctrl+Z - Desfazer", (180, 180, 180)),
                 ("Ctrl+S - Salvar PGN", (180, 180, 180)),
                 ("M - Menu Principal", (180, 180, 180)),
+                ("F11 - Tela Cheia", (180, 180, 180)),
                 (f"S - Som: {status_som}", cor_som)
             ]
 
@@ -1420,7 +1422,7 @@ def main():
                 display_board.draw_arrow(puzzle_hint_move, color=(0, 255, 0))
             # ----------------------
             
-            # Destaque da seleção (igual ao jogo)
+            # Destaque da seleção
             if selecionado is not None:
                 c = chess.square_file(selecionado)
                 r = 7 - chess.square_rank(selecionado)
@@ -1429,52 +1431,61 @@ def main():
                 screen.blit(s, (c*80, r*80))
             
             # Painel Lateral do Puzzle
-            pygame.draw.rect(screen, (60, 50, 70), (660, 0, 180, 640)) # Um roxo escuro para diferenciar
+            # Fundo escuro para destacar o texto
+            painel_rect = pygame.Rect(660, 0, 180, 640)
+            pygame.draw.rect(screen, (50, 45, 60), painel_rect) 
             
             # Título
             lbl = fonte_btn.render("Puzzle", True, (255, 255, 255))
-            screen.blit(lbl, (670 + 90 - lbl.get_width()//2, 30))
+            # Centraliza no painel (660 + 90 = 750 é o centro)
+            screen.blit(lbl, (750 - lbl.get_width()//2, 30))
             
-            # Info
-            # Quebra de linha simples para descrição
-            palavras = puzzle_info.split()
-            y_txt = 80
-            linha = ""
-            for p in palavras:
-                if len(linha + p) > 20: # Limite manual simples
-                    screen.blit(fonte_small.render(linha, True, (200, 200, 200)), (670, y_txt))
-                    y_txt += 25
-                    linha = p + " "
-                else:
-                    linha += p + " "
-            screen.blit(fonte_small.render(linha, True, (200, 200, 200)), (670, y_txt))
+            # --- DESCRIÇÃO (Usando Quebra de Linha Automática) ---
+            # Define a área útil para o texto (com margem de 10px)
+            area_desc = pygame.Rect(670, 80, 160, 200)
+            # Usa uma fonte levemente menor para caber mais texto
+            fonte_desc = pygame.font.SysFont("arial", 18)
+            
+            # Desenha o texto quebrado
+            desenhar_texto_quebrado(screen, puzzle_info, (200, 200, 200), area_desc, fonte_desc)
 
-            # Feedback (Grande e colorido)
-            cor_feed = (100, 255, 100) if "Correto" in feedback_puzzle or "RESOLVIDO" in feedback_puzzle else (255, 100, 100)
+            # --- FEEDBACK (Centralizado e Colorido) ---
+            cor_feed = (100, 255, 100) if "Correto" in feedback_puzzle or "RESOLVIDO" in feedback_puzzle else (255, 80, 80)
             if "Encontre" in feedback_puzzle: cor_feed = (255, 255, 255)
             
-            lbl_feed = fonte_small.render(feedback_puzzle, True, cor_feed)
-            screen.blit(lbl_feed, (670, 300))
+            # Vamos usar a quebra de linha aqui também para garantir que não corte
+            area_feed = pygame.Rect(670, 300, 160, 100)
+            fonte_feed = pygame.font.SysFont("arial", 20, bold=True)
+            
+            desenhar_texto_quebrado(screen, feedback_puzzle, cor_feed, area_feed, fonte_feed)
 
             # Botão Próximo Puzzle (Só aparece se resolver)
             if "RESOLVIDO" in feedback_puzzle:
-                btn_prox = pygame.Rect(670, 400, 160, 50)
-                pygame.draw.rect(screen, (100, 200, 100), btn_prox, border_radius=8)
+                btn_prox = pygame.Rect(670, 450, 160, 50)
+                pygame.draw.rect(screen, (100, 180, 100), btn_prox, border_radius=8)
+                pygame.draw.rect(screen, (255, 255, 255), btn_prox, 2, border_radius=8) # Borda
+                
                 l = fonte_btn.render("Próximo", True, (255,255,255))
                 screen.blit(l, (btn_prox.centerx - l.get_width()//2, btn_prox.centery - l.get_height()//2))
                 
-                # Detecta clique aqui mesmo (hack rápido para não criar evento lá em cima só pra isso)
+                # Hack rápido de clique (se preferir manter a lógica separada, ignore esta parte e use o evento lá em cima)
                 if pygame.mouse.get_pressed()[0]:
                     mx, my = pygame.mouse.get_pos()
                     if btn_prox.collidepoint(mx, my):
-                        # Carrega novo puzzle
                         p = puzzle_manager.get_random_puzzle()
                         if p:
                             engine.board.set_fen(p['fen'])
                             display_board.set_flip(not engine.board.turn)
                             puzzle_info = f"{p['description']} ({p['rating']})"
                             feedback_puzzle = "Encontre o melhor lance!"
-                            pygame.time.wait(200) # Evita clique duplo
+                            puzzle_hint_move = None
+                            pygame.time.wait(200)
+            
+            # Botão Voltar/Sair (Rodapé)
+            btn_sair = pygame.Rect(670, 550, 160, 40)
+            pygame.draw.rect(screen, (80, 60, 80), btn_sair, border_radius=8)
+            lbl_sair = fonte_small.render("Voltar (ESC)", True, (200, 200, 200))
+            screen.blit(lbl_sair, (btn_sair.centerx - lbl_sair.get_width()//2, btn_sair.centery - lbl_sair.get_height()//2))
 
         elif estado_atual == ESTADO_RANKING:
             scores = score_manager.load_scores()
