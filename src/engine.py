@@ -59,4 +59,15 @@ class Engine:
 	def is_game_over(self):
 		return self.board.is_game_over() or (self.winner_on_time is not None)
 
-
+	def get_winner(self):
+		if self.winner_on_time:
+			return self.winner_on_time
+		if self.board.is_game_over():
+			outcome = self.board.outcome()
+			if outcome:
+				if outcome.winner == chess.WHITE:
+					return "white"
+				elif outcome.winner == chess.BLACK:
+					return "black"
+			return "draw"
+		return None
