@@ -1,57 +1,166 @@
 [
     {
-        "title": "A Torre",
+        "title": "1. A Torre (Movimento)",
         "text": [
-            "A Torre move-se em linhas retas,",
-            "tanto na horizontal quanto na vertical.",
-            "Tente capturar o peão preto."
+            "A Torre é uma peça de longo alcance.",
+            "Ela anda em linhas retas (colunas e fileiras).",
+            "Mova a torre para a casa marcada."
         ],
-        "fen": "8/8/8/4p3/8/4R3/8/8 w - - 0 1",
-        "expected_move": "e3e5",
-        "arrow": ["e3", "e5"]
+        "fen": "8/8/8/8/8/8/4R3/4K3 w - - 0 1",
+        "expected_move": "e2e7",
+        "arrow": ["e2", "e7"]
     },
     {
-        "title": "O Bispo",
+        "title": "2. A Torre (Captura)",
         "text": [
-            "O Bispo move-se apenas nas diagonais.",
+            "A Torre 'come' as peças inimigas que estiverem",
+            "no seu caminho, parando na casa delas.",
+            "Capture o peão preto."
+        ],
+        "fen": "4k3/2p5/8/8/8/2R5/8/4K3 w - - 0 1",
+        "expected_move": "c3c7",
+        "arrow": ["c3", "c7"]
+    },
+    {
+        "title": "3. O Bispo (Movimento)",
+        "text": [
+            "O Bispo anda apenas nas diagonais.",
             "Ele nunca muda a cor da casa onde começou.",
-            "Mova o bispo para h8."
+            "Mova o bispo através do tabuleiro."
         ],
-        "fen": "8/8/8/8/4B3/8/8/8 w - - 0 1",
-        "expected_move": "e4h7",
-        "arrow": ["e4", "h7"]
+        "fen": "8/8/8/8/8/8/1B6/4K3 w - - 0 1",
+        "expected_move": "b2h8",
+        "arrow": ["b2", "h8"]
     },
     {
-        "title": "Roque (Regra Especial)",
+        "title": "4. O Bispo (Captura)",
         "text": [
-            "Se o Rei e a Torre não se moveram,",
-            "e não há peças entre eles, você pode fazer o Roque.",
-            "Mova o Rei duas casas para o lado."
+            "Assim como a Torre, o Bispo captura",
+            "ocupando a casa da peça adversária.",
+            "Capture a torre preta na diagonal."
+        ],
+        "fen": "r3k3/8/8/8/8/3B4/8/4K3 w - - 0 1",
+        "expected_move": "d3e4",
+        "arrow": ["d3", "e4"]
+    },
+    {
+        "title": "5. A Dama (Poderosa)",
+        "text": [
+            "A Dama combina os poderes da Torre e do Bispo.",
+            "Ela anda em retas e diagonais, quantas casas quiser.",
+            "Mova a Dama para o centro."
+        ],
+        "fen": "4k3/8/8/8/8/8/8/3QK3 w - - 0 1",
+        "expected_move": "d1d4",
+        "arrow": ["d1", "d4"]
+    },
+    {
+        "title": "6. A Dama (Captura)",
+        "text": [
+            "A Dama é a melhor peça para ataques.",
+            "Capture o bispo preto lá longe."
+        ],
+        "fen": "2b1k3/8/8/8/8/8/8/6Q1 w - - 0 1",
+        "expected_move": "g1c5",
+        "arrow": ["g1", "c5"]
+    },
+    {
+        "title": "7. O Rei (O Líder)",
+        "text": [
+            "O Rei é a peça mais importante, mas anda pouco.",
+            "Ele move-se apenas uma casa para qualquer lado.",
+            "Mova o Rei para frente."
+        ],
+        "fen": "4k3/8/8/8/8/8/8/4K3 w - - 0 1",
+        "expected_move": "e1e2",
+        "arrow": ["e1", "e2"]
+    },
+    {
+        "title": "8. O Cavalo (O Saltador)",
+        "text": [
+            "O Cavalo tem um movimento em forma de 'L'.",
+            "Ele é a única peça que pode PULAR sobre outras.",
+            "Salte com o cavalo."
+        ],
+        "fen": "4k3/8/8/8/8/3P4/8/1N2K3 w - - 0 1",
+        "expected_move": "b1c3",
+        "arrow": ["b1", "c3"]
+    },
+    {
+        "title": "9. O Cavalo (Captura)",
+        "text": [
+            "O Cavalo captura apenas a peça que está na",
+            "casa final do seu pulo (não as que ele pula).",
+            "Capture o peão preto."
+        ],
+        "fen": "4k3/8/2p5/8/8/4N3/8/4K3 w - - 0 1",
+        "expected_move": "e3c4",
+        "arrow": ["e3", "c4"]
+    },
+    {
+        "title": "10. O Peão (Avanço)",
+        "text": [
+            "O Peão é corajoso: só anda para frente.",
+            "Ele nunca pode recuar.",
+            "Avance o peão uma casa."
+        ],
+        "fen": "4k3/8/8/8/8/4P3/8/4K3 w - - 0 1",
+        "expected_move": "e3e4",
+        "arrow": ["e3", "e4"]
+    },
+    {
+        "title": "11. O Peão (Arrancada)",
+        "text": [
+            "Apenas no seu PRIMEIRO movimento, o peão",
+            "pode escolher andar duas casas de uma vez.",
+            "Avance duas casas."
+        ],
+        "fen": "4k3/8/8/8/8/8/4P3/4K3 w - - 0 1",
+        "expected_move": "e2e4",
+        "arrow": ["e2", "e4"]
+    },
+    {
+        "title": "12. O Peão (Captura)",
+        "text": [
+            "Atenção: O Peão anda para frente, mas",
+            "CAPTURA NA DIAGONAL (uma casa).",
+            "Coma a peça inimiga, não ande para frente."
+        ],
+        "fen": "4k3/8/8/3p4/4P3/8/8/4K3 w - - 0 1",
+        "expected_move": "e4d5",
+        "arrow": ["e4", "d5"]
+    },
+    {
+        "title": "13. Promoção",
+        "text": [
+            "Se um peão chegar ao final do tabuleiro,",
+            "ele é promovido! Geralmente escolhemos a Dama.",
+            "Leve o peão até o topo."
+        ],
+        "fen": "4k3/P7/8/8/8/8/8/4K3 w - - 0 1",
+        "expected_move": "a7a8q",
+        "arrow": ["a7", "a8"]
+    },
+    {
+        "title": "14. Roque",
+        "text": [
+            "Movimento especial de defesa.",
+            "Se o Rei e a Torre nunca mexeram, o Rei anda",
+            "duas casas para o lado e a Torre pula ele."
         ],
         "fen": "r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQkq - 0 1",
         "expected_move": "e1g1",
         "arrow": ["e1", "g1"]
     },
     {
-        "title": "En Passant (Captura Especial)",
+        "title": "15. En Passant",
         "text": [
-            "Se um peão avança duas casas e para ao lado",
-            "do seu, você pode capturá-lo como se ele",
-            "tivesse andado apenas uma. Tente!"
+            "Regra rara: Se um peão inimigo corre duas casas",
+            "e para ao seu lado, você pode capturá-lo como se",
+            "ele tivesse andado apenas uma."
         ],
         "fen": "rnbqkbnr/pp1ppppp/8/2pP4/8/8/PPP1PPPP/RNBQKBNR w KQkq c6 0 3",
         "expected_move": "d5c6",
         "arrow": ["d5", "c6"]
-    },
-    {
-        "title": "O Cavalo",
-        "text": [
-            "O Cavalo é a única peça que pode pular sobre as outras.",
-            "Ele se move em 'L': duas casas em uma direção e uma para o lado.",
-            "Capture o peão para completar."
-        ],
-        "fen": "8/8/8/6p1/4N3/8/8/8 w - - 0 1",
-        "expected_move": "e4g5",
-        "arrow": ["e4", "g5"]
     }
 ]

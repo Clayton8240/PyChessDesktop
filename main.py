@@ -304,8 +304,13 @@ def main():
 
             # --- ATALHO F11 (Tela Cheia) ---
             if event.type == pygame.KEYDOWN and event.key == pygame.K_F11:
+                print(f"[DEBUG] F11 pressionado. Estado atual: {estado_atual}")
                 toggle_fullscreen()
             # -------------------------------
+
+            # Debug: qualquer tecla pressionada
+            if event.type == pygame.KEYDOWN:
+                print(f"[DEBUG] Tecla pressionada: {event.key}, estado_atual={estado_atual}")
 
             # Atalho Global M para Menu
             if event.type == pygame.KEYDOWN and event.key == pygame.K_m and estado_atual != ESTADO_INPUT_NOME:
@@ -492,27 +497,55 @@ def main():
                                 realizar_jogada(engine, move, display_board, sound_manager)
 
             elif estado_atual == ESTADO_TUTORIAL:
-                # Navegação Manual
+                # --- NOVO: Navegação por Teclado ---
+                if event.type == pygame.KEYDOWN:
+                    print(f"[DEBUG] Tecla pressionada no tutorial: {event.key}, estado_atual={estado_atual}, tutorial_concluido={tutorial_concluido}")
+                    # Seta DIREITA (Próximo) ou ESPAÇO
+                    if event.key == pygame.K_RIGHT or (tutorial_concluido and event.key == pygame.K_SPACE):
+                        print("[DEBUG] Seta Direita ou Espaço detectado no tutorial.")
+                        l = tutorial_manager.next_lesson()
+                        if l:
+                            engine.board.set_fen(l['fen'])
+                            tutorial_concluido = False
+                            display_board.set_flip(False)
+                            sound_manager.play('move')
+                    # Seta ESQUERDA (Anterior)
+                    elif event.key == pygame.K_LEFT:
+                        print("[DEBUG] Seta Esquerda detectada no tutorial.")
+                        l = tutorial_manager.prev_lesson()
+                        if l:
+                            engine.board.set_fen(l['fen'])
+                            tutorial_concluido = False
+                            display_board.set_flip(False)
+                            sound_manager.play('move')
+                    # ESC (Sair)
+                    elif event.key == pygame.K_ESCAPE:
+                        print("[DEBUG] ESC detectado no tutorial. Voltando ao menu.")
+                        estado_atual = ESTADO_MENU
+                        sound_manager.play('menu')
+
+                # --- Fim da lógica de teclado ---
+
+                # Navegação Manual (Mouse) - Seu código existente continua aqui...
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     mx, my = event.pos
-                    
                     # Botões de Navegação (Definidos visualmente abaixo)
                     btn_prev = pygame.Rect(670, 550, 40, 40)
                     btn_next = pygame.Rect(720, 550, 40, 40)
                     btn_menu = pygame.Rect(770, 550, 40, 40)
-                    
+
                     if btn_menu.collidepoint(mx, my):
                         estado_atual = ESTADO_MENU
                         sound_manager.play('menu')
                     elif btn_next.collidepoint(mx, my):
                         l = tutorial_manager.next_lesson()
-                        if l: 
+                        if l:
                             engine.board.set_fen(l['fen'])
                             tutorial_concluido = False
                         sound_manager.play('move')
                     elif btn_prev.collidepoint(mx, my):
                         l = tutorial_manager.prev_lesson()
-                        if l: 
+                        if l:
                             engine.board.set_fen(l['fen'])
                             tutorial_concluido = False
                         sound_manager.play('move')
@@ -524,7 +557,7 @@ def main():
                         if display_board.is_flipped: c, r = 7-c, 7-r
                         if 0 <= c <= 7 and 0 <= r <= 7:
                             square = chess.square(c, 7 - r)
-                            
+
                             if selecionado is None:
                                 p = engine.board.piece_at(square)
                                 if p and p.color == engine.board.turn:
@@ -538,27 +571,24 @@ def main():
                                     move.promotion = chess.QUEEN
 
                                 if move in engine.board.legal_moves:
-                                   # A função check_move deve retornar um booleano simples.
-                                   # Se retornasse uma tupla (ex: (True, False)), `if (True, False)` em Python é True.
-                                   # Garantimos que estamos checando o resultado booleano.
-                                   is_correct = tutorial_manager.check_move(move)
-                                   if isinstance(is_correct, tuple): # Medida de segurança se a função retornar tupla
-                                       is_correct = is_correct[0]
+                                    is_correct = tutorial_manager.check_move(move)
+                                    if isinstance(is_correct, tuple):
+                                        is_correct = is_correct[0]
 
-                                   if is_correct:
-                                       realizar_jogada(engine, move, display_board, sound_manager)
-                                       tutorial_concluido = True
-                                       sound_manager.play('game_over') # Sucesso
-                                   else:
-                                       sound_manager.play('defeat') # Errou o que o tutorial pediu
-                                       selecionado = None # Deseleciona
+                                    if is_correct:
+                                        realizar_jogada(engine, move, display_board, sound_manager)
+                                        tutorial_concluido = True
+                                        sound_manager.play('game_over')
+                                    else:
+                                        sound_manager.play('defeat')
+                                        selecionado = None
                                 else:
                                     p = engine.board.piece_at(square)
-                                    if p and p.color == engine.board.turn: # Clicar em outra peça sua
+                                    if p and p.color == engine.board.turn:
                                         selecionado = square
                                         sound_manager.play('move')
                                     else:
-                                        selecionado = None # Clicar em casa vazia ou peça inimiga
+                                        selecionado = None
 
             elif estado_atual == ESTADO_TEMA:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -682,7 +712,34 @@ def main():
             elif estado_atual == ESTADO_JOGANDO and not aguardando_ia:
                 # Atalhos
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_z and (pygame.key.get_mods() & pygame.KMOD_CTRL):
+                    print(f"[DEBUG] Tecla pressionada no puzzle: {event.key}, estado_atual={estado_atual}")
+                    # Seta DIREITA (Próximo) ou ESPAÇO
+                    if event.key == pygame.K_RIGHT or (('puzzle_concluido' in locals() and puzzle_concluido) and event.key == pygame.K_SPACE):
+                        print("[DEBUG] Seta Direita ou Espaço detectado no puzzle.")
+                        if 'puzzle_manager' in locals() and hasattr(puzzle_manager, 'next_puzzle'):
+                            l = puzzle_manager.next_puzzle()
+                            if l and hasattr(engine, 'board'):
+                                engine.board.set_fen(l['fen'])
+                                if 'puzzle_concluido' in locals(): puzzle_concluido = False
+                                if 'display_board' in locals(): display_board.set_flip(False)
+                                if 'sound_manager' in locals(): sound_manager.play('move')
+                    # Seta ESQUERDA (Anterior)
+                    elif event.key == pygame.K_LEFT:
+                        print("[DEBUG] Seta Esquerda detectada no puzzle.")
+                        if 'puzzle_manager' in locals() and hasattr(puzzle_manager, 'prev_puzzle'):
+                            l = puzzle_manager.prev_puzzle()
+                            if l and hasattr(engine, 'board'):
+                                engine.board.set_fen(l['fen'])
+                                if 'puzzle_concluido' in locals(): puzzle_concluido = False
+                                if 'display_board' in locals(): display_board.set_flip(False)
+                                if 'sound_manager' in locals(): sound_manager.play('move')
+                    # ESC (Sair)
+                    elif event.key == pygame.K_ESCAPE:
+                        print("[DEBUG] ESC detectado no puzzle. Voltando ao menu.")
+                        estado_atual = ESTADO_MENU
+                        if 'sound_manager' in locals(): sound_manager.play('menu')
+                    # Atalhos já existentes
+                    elif event.key == pygame.K_z and (pygame.key.get_mods() & pygame.KMOD_CTRL):
                         if len(engine.board.move_stack) >= 2:
                             display_board.active_animation = None
                             engine.board.pop(); engine.board.pop()
@@ -698,12 +755,8 @@ def main():
                         if (pygame.key.get_mods() & pygame.KMOD_CTRL): # Ctrl+S = Salvar
                             result = engine.board.result()
                             nome = pgn_manager.save_game(engine.board, "Brancas" if jogador_brancas else "IA", "IA" if jogador_brancas else "Pretas", result)
-                            
-                            # --- CÓDIGO NOVO ---
                             aviso_texto = "Partida Salva com Sucesso!"
                             aviso_timer = pygame.time.get_ticks() + 2500 # Mostra por 2.5 segundos
-                            # -------------------
-                            
                             print(f"Salvo: {nome}")
                             sound_manager.play('menu')
                         else: # S = Som
@@ -846,12 +899,32 @@ def main():
 
             # --- ESTADO: PUZZLE ---
             elif estado_atual == ESTADO_PUZZLE:
+                # --- RENDERIZAÇÃO (DESENHO) ---
+                if estado_atual == ESTADO_PUZZLE:
+                    # Mensagem visual de atalho ao resolver o puzzle
+                    try:
+                        if 'puzzle_manager' in locals() and hasattr(puzzle_manager, 'is_puzzle_concluido'):
+                            puzzle_concluido = puzzle_manager.is_puzzle_concluido()
+                        elif 'feedback_puzzle' in locals() and feedback_puzzle and 'RESOLVIDO' in feedback_puzzle.upper():
+                            puzzle_concluido = True
+                        else:
+                            puzzle_concluido = False
+                    except Exception:
+                        puzzle_concluido = False
+
+                    if puzzle_concluido:
+                        pygame.draw.rect(screen, (50, 150, 50), (670, 450, 160, 40), border_radius=8)
+                        lbl_ok = fonte_small.render("Muito Bem!", True, WHITE)
+                        screen.blit(lbl_ok, (670 + (160 - lbl_ok.get_width())//2, 460))
+                        msg_prox = "Pressione  >  para avançar"
+                        lbl_next = pygame.font.SysFont("arial", 14).render(msg_prox, True, (150, 255, 150))
+                        screen.blit(lbl_next, (670 + (160 - lbl_next.get_width())//2, 500))
+
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         estado_atual = ESTADO_MENU
                         engine.start()
                         puzzle_hint_move = None # Limpa dica ao sair
-                    
                     # --- DICA (H) ---
                     elif event.key == pygame.K_h:
                         puzzle_hint_move = puzzle_manager.get_solution_move()
@@ -860,13 +933,13 @@ def main():
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     # Se o jogador clicar para tentar mover, limpe a dica para não poluir
                     puzzle_hint_move = None 
-                    
                     # ... (Copie a lógica de clique do ESTADO_JOGANDO aqui, mas com validação diferente) ...
                     mouse_x, mouse_y = event.pos
                     if mouse_x < 640:
                         c = mouse_x // 80
                         r = mouse_y // 80
-                        if display_board.is_flipped: c, r = 7-c, 7-r
+                        if display_board.is_flipped:
+                            c, r = 7-c, 7-r
                         if 0 <= c <= 7 and 0 <= r <= 7:
                             square = chess.square(c, 7 - r)
                             
@@ -1158,8 +1231,9 @@ def main():
                     pygame.draw.rect(screen, (50, 150, 50), (670, 450, 160, 40), border_radius=8)
                     lbl_ok = fonte_small.render("Muito Bem!", True, WHITE)
                     screen.blit(lbl_ok, (670 + (160 - lbl_ok.get_width())//2, 460))
-                    
-                    lbl_next = pygame.font.SysFont("arial", 14).render("Clique > para avançar", True, (150, 255, 150))
+                    # --- MUDANÇA AQUI: Texto atualizado ---
+                    msg_prox = "Pressione  >  para avançar"
+                    lbl_next = pygame.font.SysFont("arial", 14).render(msg_prox, True, (150, 255, 150))
                     screen.blit(lbl_next, (670 + (160 - lbl_next.get_width())//2, 500))
 
             # Botões de Navegação
