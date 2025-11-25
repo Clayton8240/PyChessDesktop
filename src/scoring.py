@@ -41,6 +41,17 @@ class ScoreManager:
 		if total == 0:
 			return 0.0
 		return (stats['wins'] / total) * 100
+
+	def reset_stats(self):
+		"""Zera as estatísticas globais."""
+		stats = {"wins": 0, "losses": 0, "draws": 0, "games_played": 0}
+		# Salva o arquivo zerado
+		try:
+			with open(self._get_stats_path(), 'w', encoding='utf-8') as f:
+				json.dump(stats, f, indent=4)
+		except Exception as e:
+			print(f"Erro ao resetar stats: {e}")
+			
 	def __init__(self, scores_path=None):
 		if scores_path is None:
 			base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

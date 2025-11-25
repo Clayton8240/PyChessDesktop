@@ -643,6 +643,16 @@ def main():
                         config_manager.set("auto_save", val)
                         sound_manager.play('menu')
 
+                    # BOTÃO RESETAR STATS (NOVO)
+                    btn_reset_rect = pygame.Rect(270, 400, 300, 45)
+                    if btn_reset_rect.collidepoint(event.pos):
+                        score_manager.reset_stats()
+                        sound_manager.play('defeat') # Um som de impacto/aviso
+                        
+                        # Feedback Visual (Toast)
+                        aviso_texto = "Estatísticas Zeradas!"
+                        aviso_timer = pygame.time.get_ticks() + 2000
+
                     # Botão Voltar
                     btn_voltar = pygame.Rect(320, 550, 200, 40)
                     if btn_voltar.collidepoint(event.pos):
@@ -1247,6 +1257,19 @@ def main():
             lbl_save = fonte_btn.render("Gravar PGN Auto", True, WHITE)
             screen.blit(lbl_save, (320, 330))
             
+            # --- BOTÃO RESETAR STATS (NOVO) ---
+            btn_reset_rect = pygame.Rect(270, 400, 300, 45)
+            
+            # Cor vermelha escura para indicar cuidado, clara se passar o mouse
+            mouse_pos = pygame.mouse.get_pos()
+            cor_btn = (200, 60, 60) if btn_reset_rect.collidepoint(mouse_pos) else (150, 40, 40)
+            
+            pygame.draw.rect(screen, cor_btn, btn_reset_rect, border_radius=8)
+            pygame.draw.rect(screen, (255, 150, 150), btn_reset_rect, 2, border_radius=8) # Borda
+            
+            lbl_reset = fonte_btn.render("Resetar Estatísticas", True, (255, 255, 255))
+            screen.blit(lbl_reset, (btn_reset_rect.centerx - lbl_reset.get_width()//2, btn_reset_rect.centery - lbl_reset.get_height()//2))
+
             # Botão Voltar
             btn_voltar = pygame.Rect(320, 550, 200, 40)
             pygame.draw.rect(screen, (150, 50, 50), btn_voltar, border_radius=8)
