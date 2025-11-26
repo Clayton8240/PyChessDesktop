@@ -1,0 +1,10 @@
+[Event "Partida Casual PyChess"]
+[Site "Local"]
+[Date "2025.11.25"]
+[Round "1"]
+[White "Jogador"]
+[Black "Computador"]
+[Result "0-1"]
+
+1. d4 Na6 2. Nh3 Nb4 3. a4 Rb8 4. Ra2 Nxa2 5. Na3 Nxc1 6. Qxc1 Ra8 7. Nc4 Rb8 8. d5 Ra8 9. b4 Nf6 10. d6 cxd6 11. Na3 Rg8 12. Nb5 Ne4 13. f3 Nf6 14. Na3 Nd5 15. b5 Qb6 16. Qa1 Qa5+ 17. Kd1 Ne3+ 18. Kc1 Nxf1 19. Rxf1 g6 20. Nf4 Bh6 21. Kb2 Bxf4 22. h4 Qxa4 23. Kb1 Bd2 24. Rh1 Rb8 25. Rh2 Be1 26. Qa2 Qb4+ 27. Kc1 Bd2+ 28. Kd1 d5 29. Qxd5 Qxa3 30. Kxd2 Qa5+ 31. Kd1 Qa1+ 32. Kd2 Qa5+ 33. Kc1 Qe1+ 34. Kb2 Qxe2 35. Ka2 Qxc2+ 36. Ka3 Qc3+ 37. Ka4 Qc2+ 38. Kb4 Qb1+ 39. Kc3 Qa1+ 40. Kc4 Qa2+ 41. Kc3 Qxd5 42. Rh3 Qxb5 43. Rh2 Qc5+ 44. Kd3 Qb4 45. h5 Qd6+ 46. Ke4 Qxh2 47. hxg6 Rxg6 48. Kd3 Qxg2 49. f4 Rg7 50. Kd4 Qf1 51. Ke4 Kd8 52. Kf5 Rg3 53. Ke4 Qg1 54. Kf5 Rb3 55. Ke4 Qc5 56. f5 Qd6 57. f6 Qxf6 58. Kd5 Qb2 59. Ke4 Qh8 60. Kd5 Qg7 61. Kc5 Qh6 62. Kd4 Rb6 63. Ke4 Re6+ 64. Kd3 Rc6 65. Kd4 Qe6 66. Kd3 Ke8 67. Kd4 Rd6+ 68. Kc3 Rb6 69. Kc2 Qe1 70. Kd3 Qa1 71. Kc4 Qa5 72. Kd3 Ra8 73. Ke3 Rb5 74. Kf4 Rb8 75. Kg4 Rb4+ 76. Kf3 Qe5 77. Kg2 Rb2+ 78. Kf1 Rc2 79. Kg1 Qa1# 0-1
+
