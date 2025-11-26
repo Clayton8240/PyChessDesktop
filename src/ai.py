@@ -235,9 +235,9 @@ def get_best_move(board, difficulty):
     elif difficulty == 3:
         depth = 3
     elif difficulty == 4:
-        depth = 4
-    else:
         depth = 5
+    else:
+        depth = 6
     
     maximizing = (board.turn == chess.WHITE)
     best_value = -float('inf') if maximizing else float('inf')
