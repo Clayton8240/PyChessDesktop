@@ -123,9 +123,10 @@ def main():
     screen = pygame.display.set_mode((840, 640), flags, vsync=1)
 
     # 2. Se a configuração salva pedir Fullscreen, alternamos agora
-    # Isso evita o travamento de "boot direto" em drivers sensíveis
+    # Se fullscreen estiver ativado, já cria a janela em fullscreen
     if config_manager.get("fullscreen"):
-        pygame.display.toggle_fullscreen()
+        flags |= pygame.FULLSCREEN
+        screen = pygame.display.set_mode((840, 640), flags, vsync=1)
     
     pygame.display.set_caption("My Chess")
 
@@ -250,30 +251,34 @@ def main():
         # 1. Salva o estado atual
         is_full = not config_manager.get("fullscreen")
         config_manager.set("fullscreen", is_full)
-        
-        # 2. Define as flags
-        # IMPORTANTE: Sempre usamos SCALED para manter a proporção 840x640
-        flags = pygame.SCALED 
-        if is_full:
-            flags |= pygame.FULLSCREEN
-        
-        # 3. Recria a janela de forma segura
+
         try:
-            # Atualiza a variável 'screen' do escopo de main
-            nonlocal screen 
-            
-            # Pequeno delay para o SO processar a mudança anterior se houver spam de F11
-            pygame.time.wait(100) 
-            
-            screen = pygame.display.set_mode((840, 640), flags, vsync=1)
-            
-            # Força um evento de resize para garantir que o conteúdo se ajuste
-            pygame.event.post(pygame.event.Event(pygame.VIDEORESIZE, size=(840, 640), w=840, h=640))
-            
+            nonlocal screen
+            pygame.time.wait(100)
+
+            if is_full:
+                info = pygame.display.Info()
+                width, height = info.current_w, info.current_h
+                flags = pygame.FULLSCREEN
+                try:
+                    screen = pygame.display.set_mode((width, height), flags)
+                except Exception:
+                    screen = pygame.display.set_mode((width, height))
+                pygame.event.post(pygame.event.Event(pygame.VIDEORESIZE, size=(width, height), w=width, h=height))
+            else:
+                flags = pygame.SCALED
+                try:
+                    screen = pygame.display.set_mode((840, 640), flags)
+                except Exception:
+                    screen = pygame.display.set_mode((840, 640))
+                pygame.event.post(pygame.event.Event(pygame.VIDEORESIZE, size=(840, 640), w=840, h=640))
         except Exception as e:
             print(f"Erro ao trocar tela: {e}")
-            # Fallback de emergência: volta para janela normal
-            screen = pygame.display.set_mode((840, 640), pygame.SCALED)
+            # Fallback de emergência: tenta sem flag nenhuma
+            try:
+                screen = pygame.display.set_mode((840, 640))
+            except Exception as e2:
+                print(f"Erro crítico ao criar janela: {e2}")
             config_manager.set("fullscreen", False)
 
         return is_full
@@ -300,7 +305,13 @@ def main():
         eventos = pygame.event.get()
         for event in eventos:
             if event.type == pygame.QUIT:
-                pygame.quit(); sys.exit()
+                # VERIFICAÇÃO DE ABANDONO
+                # Se estiver jogando e o jogo não acabou, conta como derrota
+                if estado_atual == ESTADO_JOGANDO and not engine.is_game_over():
+                    score_manager.update_stats('loss')
+                    print("Jogo abandonado pelo usuário. Derrota contabilizada.")
+                pygame.quit()
+                sys.exit()
 
             # --- ATALHO F11 (Tela Cheia) ---
             if event.type == pygame.KEYDOWN and event.key == pygame.K_F11:
@@ -314,7 +325,13 @@ def main():
 
             # Atalho Global M para Menu
             if event.type == pygame.KEYDOWN and event.key == pygame.K_m and estado_atual != ESTADO_INPUT_NOME:
-                engine.start()
+                # --- VERIFICAÇÃO DE ABANDONO (NOVO) ---
+                # Se o jogador tenta voltar ao menu com o jogo rolando, conta como derrota
+                if estado_atual == ESTADO_JOGANDO and not engine.is_game_over():
+                    score_manager.update_stats('loss')
+                    print("Partida abandonada via Menu. Derrota registrada.")
+                # --------------------------------------
+                engine.start() # Reseta o tabuleiro
                 estado_atual = ESTADO_MENU
                 sound_manager.play('menu')
                 continue
@@ -323,6 +340,10 @@ def main():
             if estado_atual == ESTADO_MENU:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if btn_novo.collidepoint(event.pos):
+                        # --- VERIFICAÇÃO DE ABANDONO PELO BOTÃO NOVO JOGO ---
+                        if estado_atual == ESTADO_JOGANDO and not engine.is_game_over():
+                            score_manager.update_stats('loss')
+                            print("Partida abandonada via Novo Jogo. Derrota registrada.")
                         sound_manager.play('menu')
                         estado_atual = ESTADO_ESCOLHA_COR
                     elif btn_replay.collidepoint(event.pos):
@@ -1023,11 +1044,29 @@ def main():
                 cor_fim_jogo = (200, 50, 50)
                 sound_manager.play('defeat')
 
-            # Define Subtexto (Motivo)
-            if engine.winner_on_time: subtexto_fim_jogo = "Tempo Esgotado"
-            elif engine.board.is_checkmate(): subtexto_fim_jogo = "Xeque-mate"
-            elif engine.board.is_stalemate(): subtexto_fim_jogo = "Afogamento"
-            else: subtexto_fim_jogo = "Fim de Partida"
+
+            # --- NOVO CÓDIGO: MOTIVO DETALHADO ---
+            outcome = engine.board.outcome()
+            reason = outcome.termination if outcome else None
+
+            if engine.winner_on_time:
+                subtexto_fim_jogo = "Tempo Esgotado"
+            elif reason == chess.Termination.CHECKMATE:
+                subtexto_fim_jogo = "Por Xeque-mate"
+            elif reason == chess.Termination.STALEMATE:
+                subtexto_fim_jogo = "Por Afogamento (Rei sem saída)"
+            elif reason == chess.Termination.INSUFFICIENT_MATERIAL:
+                subtexto_fim_jogo = "Peças Insuficientes"
+            elif reason == chess.Termination.SEVENTY_FIVE_MOVES:
+                subtexto_fim_jogo = "Regra dos 75 Lances (Sem captura)"
+            elif reason == chess.Termination.FIVEFOLD_REPETITION:
+                subtexto_fim_jogo = "Empate por Repetição (5x)"
+            elif reason == chess.Termination.THREEFOLD_REPETITION:
+                subtexto_fim_jogo = "Empate por Repetição (3x)"
+            elif reason == chess.Termination.FIFTY_MOVES:
+                subtexto_fim_jogo = "Regra dos 50 Lances"
+            else:
+                subtexto_fim_jogo = "Fim de Partida"
 
             # --- CÁLCULO DA PONTUAÇÃO (ATUALIZADO) ---
             pontuacao_final = score_manager.calcular_pontuacao(
