@@ -1,3 +1,5 @@
+# --- Transposition Table (Hash de posições) ---
+transpo_table = {}
 import chess
 import random
 
@@ -87,6 +89,47 @@ king_mid_table = [
      20, 30, 10,  0,  0, 10, 30, 20
 ]
 
+# Rei (Final de Jogo): Centralize o Rei!
+king_end_table = [
+    -50,-40,-30,-20,-20,-30,-40,-50,
+    -30,-20,-10,  0,  0,-10,-20,-30,
+    -30,-10, 20, 30, 30, 20,-10,-30,
+    -30,-10, 30, 40, 40, 30,-10,-30,
+    -30,-10, 30, 40, 40, 30,-10,-30,
+    -30,-10, 20, 30, 30, 20,-10,-30,
+    -30,-30,  0,  0,  0,  0,-30,-30,
+    -50,-30,-30,-30,-30,-30,-30,-50
+]
+
+# --- Função de Ordenação MVV-LVA ---
+def score_move(move, board):
+    if board.is_capture(move):
+        victim = board.piece_at(move.to_square)
+        victim_val = piece_values.get(victim.piece_type, 0) if victim else 0
+        aggressor = board.piece_at(move.from_square)
+        aggressor_val = piece_values.get(aggressor.piece_type, 0) if aggressor else 0
+        return 10000 + victim_val - aggressor_val
+    return 0
+
+# --- Busca de Quiescência ---
+def quiescence(board, alpha, beta):
+    stand_pat = evaluate_board(board)
+    if stand_pat >= beta:
+        return beta
+    if alpha < stand_pat:
+        alpha = stand_pat
+    capturas = [m for m in board.legal_moves if board.is_capture(m)]
+    capturas.sort(key=lambda m: score_move(m, board), reverse=True)
+    for move in capturas:
+        board.push(move)
+        score = -quiescence(board, -beta, -alpha)
+        board.pop()
+        if score >= beta:
+            return beta
+        if score > alpha:
+            alpha = score
+    return alpha
+
 def evaluate_board(board):
     if board.is_checkmate():
         if board.turn: return -99999
@@ -96,9 +139,10 @@ def evaluate_board(board):
         return 0
 
     score = 0
-    # Verifica se estamos no final do jogo (sem rainhas ou poucas peças)
-    # No final, o Rei deve ir para o centro, não se esconder.
-    is_endgame = len(board.pieces(chess.QUEEN, chess.WHITE)) == 0 and len(board.pieces(chess.QUEEN, chess.BLACK)) == 0
+    # Detecta final de jogo: sem rainhas ou material muito reduzido
+    num_queens = len(board.pieces(chess.QUEEN, chess.WHITE)) + len(board.pieces(chess.QUEEN, chess.BLACK))
+    num_minors = sum(len(board.pieces(pt, chess.WHITE)) + len(board.pieces(pt, chess.BLACK)) for pt in [chess.BISHOP, chess.KNIGHT])
+    is_endgame = num_queens == 0 or (num_queens == 2 and (len(board.pieces(chess.ROOK, chess.WHITE)) + len(board.pieces(chess.ROOK, chess.BLACK)) + num_minors) <= 1)
 
     for square in chess.SQUARES:
         piece = board.piece_at(square)
@@ -124,9 +168,9 @@ def evaluate_board(board):
         elif piece.piece_type == chess.QUEEN:
             pst_value = queens_table[table_idx]
         elif piece.piece_type == chess.KING:
-            # Se for final de jogo, não usamos a tabela de segurança, o rei vira peça de ataque
+            # Usa tabela de finais para o Rei se for endgame
             if is_endgame:
-                pst_value = 0 
+                pst_value = king_end_table[table_idx]
             else:
                 pst_value = king_mid_table[table_idx]
 
@@ -139,15 +183,19 @@ def evaluate_board(board):
 
 # --- MINIMAX OTIMIZADO ---
 def minimax(board, depth, alpha, beta, maximizing_player):
+    # Transposition Table Lookup
+    key = (board.transposition_key(), depth, maximizing_player)
+    if key in transpo_table:
+        return transpo_table[key]
+
     if depth == 0 or board.is_game_over():
-        return evaluate_board(board)
+        val = quiescence(board, alpha, beta)
+        transpo_table[key] = val
+        return val
 
     legal_moves = list(board.legal_moves)
-    
-    # OTIMIZAÇÃO DE ORDEM: Avalia capturas primeiro!
-    # Isso faz o Alpha-Beta podar árvores ruins muito mais rápido.
-    # Ordena movimentos que capturam peças para o início da lista
-    legal_moves.sort(key=lambda move: 1 if board.is_capture(move) else 0, reverse=True)
+    # Ordenação MVV-LVA
+    legal_moves.sort(key=lambda m: score_move(m, board), reverse=True)
 
     if maximizing_player:
         max_eval = -float('inf')
@@ -158,6 +206,7 @@ def minimax(board, depth, alpha, beta, maximizing_player):
             max_eval = max(max_eval, eval)
             alpha = max(alpha, eval)
             if beta <= alpha: break
+        transpo_table[key] = max_eval
         return max_eval
     else:
         min_eval = float('inf')
@@ -168,6 +217,7 @@ def minimax(board, depth, alpha, beta, maximizing_player):
             min_eval = min(min_eval, eval)
             beta = min(beta, eval)
             if beta <= alpha: break
+        transpo_table[key] = min_eval
         return min_eval
 
 def get_best_move(board, difficulty):
@@ -177,16 +227,17 @@ def get_best_move(board, difficulty):
     # Nível 1: Fácil (Aleatório)
     if difficulty == 1:
         return random.choice(legal_moves)
-    
-    # Nível 2: Médio (Depth 2 + PST)
-    # Nível 3: Difícil (Depth 3 + PST)
-    # Nível 4: Profissional (Depth 3 + PST + Move Ordering agressivo implícito no minimax)
-    
-    # Nota: Mantemos depth 3 para Profissional para não travar, 
-    # mas a inteligência vem das tabelas (PST) novas que adicionamos acima.
-    depth = 2
-    if difficulty >= 3:
+
+    # Profundidade adaptativa por dificuldade
+    # 2 = fácil, 3 = médio, 4 = difícil, 5+ = profissional
+    if difficulty == 2:
+        depth = 2
+    elif difficulty == 3:
         depth = 3
+    elif difficulty == 4:
+        depth = 4
+    else:
+        depth = 5
     
     maximizing = (board.turn == chess.WHITE)
     best_value = -float('inf') if maximizing else float('inf')
