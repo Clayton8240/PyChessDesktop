@@ -10,7 +10,7 @@ PyChessDesktop é um jogo de xadrez com interface gráfica, puzzles, sons e skin
 ## Instalação
 1. **Clone o repositório:**
    ```bash
-   git clone <URL_DO_REPOSITORIO>
+   git clone https://github.com/Clayton8240/PyChessDesktop.git
    cd PyChessDesktop
    ```
 2. **Crie um ambiente virtual (opcional, mas recomendado):**
