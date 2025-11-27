@@ -190,7 +190,7 @@ class DisplayBoard:
                 except FileNotFoundError:
                     print(f"ERRO CRÍTICO: Imagem {filename} não encontrada nem na skin nem no padrão.")
 
-    def draw(self, board):
+    def draw(self, board, skip_square=None):
         if self.active_animation:
             self.active_animation.update()
             if self.active_animation.finished:
@@ -211,6 +211,8 @@ class DisplayBoard:
         
         for square in chess.SQUARES:
             if self.animating_dest_square is not None and square == self.animating_dest_square:
+                continue
+            if skip_square is not None and square == skip_square:
                 continue
             piece = board.piece_at(square)
             if piece:

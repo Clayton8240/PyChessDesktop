@@ -195,6 +195,9 @@ def main():
 
     # Variáveis de controle
     selecionado = None
+    dragging = False
+    dragged_piece = None
+    dragged_from_square = None
     aguardando_ia = False
     pontuacao_final = 0
     tempo_decorrido = 0
@@ -803,11 +806,84 @@ def main():
                         else: # S = Som
                             sound_manager.enabled = not sound_manager.enabled
 
-                # Cliques do Jogo
-                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    # Lógica de Promoção
-                    if promocao_pendente and quadrado_promocao is not None:
-                        # ... (lógica de botões de promoção simplificada)
+                # --- LÓGICA HÍBRIDA (Arrastar e Clicar) ---
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not promocao_pendente:
+                    mouse_x, mouse_y = event.pos
+                    if mouse_x < 640:
+                        c = mouse_x // 80
+                        r = mouse_y // 80
+                        if display_board.is_flipped: c, r = 7-c, 7-r
+                        square = chess.square(c, 7-r)
+                        piece = engine.board.piece_at(square)
+
+                        # Se clicou em uma peça do jogador
+                        if piece and piece.color == (chess.WHITE if jogador_brancas else chess.BLACK):
+                            dragging = True
+                            dragged_piece = piece
+                            dragged_from_square = square
+                        
+                        # Se já tinha uma peça selecionada (lógica do segundo clique)
+                        elif selecionado is not None:
+                            move = chess.Move(selecionado, square)
+                            # Checa promoção para o clique-a-clique
+                            if engine.board.piece_at(selecionado).piece_type == chess.PAWN and chess.square_rank(square) in [0, 7]:
+                                if chess.Move(selecionado, square, promotion=chess.QUEEN) in engine.board.legal_moves:
+                                    promocao_pendente = True
+                                    move_promocao_pendente = move
+                                    cor_promocao_pendente = engine.board.piece_at(selecionado).color
+                                    quadrado_promocao = square
+                                    selecionado = None
+                                    dragging = False # Garante que não continue arrastando
+                            elif move in engine.board.legal_moves:
+                                realizar_jogada(engine, move, display_board, sound_manager)
+                                eval_bar.update(evaluate_board(engine.board))
+                                aguardando_ia = True
+                                ultima_dica_move = None
+                                selecionado = None
+                            # Se o movimento for ilegal, simplesmente deseleciona
+                            else:
+                                selecionado = None
+                            
+                            dragging = False # Garante que um segundo clique não inicie um arrasto
+                
+                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                    if dragging:
+                        mouse_x, mouse_y = event.pos
+                        to_square = None
+                        if mouse_x < 640:
+                            c = mouse_x // 80
+                            r = mouse_y // 80
+                            if display_board.is_flipped: c, r = 7-c, 7-r
+                            to_square = chess.square(c, 7-r)
+
+                        # Se foi um arrasto para um quadrado diferente
+                        if dragged_from_square is not None and to_square is not None and dragged_from_square != to_square:
+                            move = chess.Move(dragged_from_square, to_square)
+                            # Checa promoção para o arrastar-e-soltar
+                            if (engine.board.piece_at(dragged_from_square).piece_type == chess.PAWN and
+                                chess.square_rank(to_square) in [0, 7] and
+                                chess.Move(dragged_from_square, to_square, promotion=chess.QUEEN) in engine.board.legal_moves):
+                                promocao_pendente = True
+                                move_promocao_pendente = move
+                                cor_promocao_pendente = engine.board.piece_at(dragged_from_square).color
+                                quadrado_promocao = to_square
+                            elif move in engine.board.legal_moves:
+                                realizar_jogada(engine, move, display_board, sound_manager)
+                                eval_bar.update(evaluate_board(engine.board))
+                                aguardando_ia = True
+                                ultima_dica_move = None
+                            
+                            selecionado = None # Finaliza a seleção após um arrasto
+
+                        # Se foi um simples clique (ou arrasto para o mesmo lugar)
+                        else:
+                            if selecionado == dragged_from_square: # Se já estava selecionado, deseleciona
+                                selecionado = None
+                            else: # Senão, seleciona
+                                selecionado = dragged_from_square
+
+                    # Lida com o clique nos botões de promoção
+                    elif promocao_pendente and quadrado_promocao is not None:
                         col = chess.square_file(quadrado_promocao)
                         row = 7 - chess.square_rank(quadrado_promocao)
                         if display_board.is_flipped: col, row = 7-col, 7-row
@@ -821,44 +897,14 @@ def main():
                                 move = chess.Move(move_promocao_pendente.from_square, move_promocao_pendente.to_square, promotion=ptype)
                                 realizar_jogada(engine, move, display_board, sound_manager)
                                 eval_bar.update(evaluate_board(engine.board))
-                                selecionado = None; promocao_pendente = False; aguardando_ia = True
-                        continue
+                                promocao_pendente = False
+                                aguardando_ia = True
+                                break
 
-                    # Lógica de Movimento
-                    mouse_x, mouse_y = event.pos
-                    if mouse_x < 640:
-                        c = mouse_x // 80
-                        r = mouse_y // 80
-                        if display_board.is_flipped: c, r = 7-c, 7-r
-                        if 0 <= c <= 7 and 0 <= r <= 7:
-                            square = chess.square(c, 7 - r)
-                            if selecionado is None:
-                                piece = engine.board.piece_at(square)
-                                if piece and piece.color == (chess.WHITE if jogador_brancas else chess.BLACK):
-                                    selecionado = square
-                                    sound_manager.play('move')
-                            else:
-                                move = chess.Move(selecionado, square)
-                                # Checa Promoção
-                                if engine.board.piece_at(selecionado).piece_type == chess.PAWN and chess.square_rank(square) in [0, 7]:
-                                    if chess.Move(selecionado, square, promotion=chess.QUEEN) in engine.board.legal_moves:
-                                        promocao_pendente = True
-                                        move_promocao_pendente = move
-                                        cor_promocao_pendente = engine.board.piece_at(selecionado).color
-                                        quadrado_promocao = square
-                                        continue
-                                
-                                if move in engine.board.legal_moves:
-                                    realizar_jogada(engine, move, display_board, sound_manager)
-                                    eval_bar.update(evaluate_board(engine.board))
-                                    selecionado = None; aguardando_ia = True
-                                    ultima_dica_move = None  # Limpa seta de dica após jogada
-                                else:
-                                    p = engine.board.piece_at(square)
-                                    if p and p.color == (chess.WHITE if jogador_brancas else chess.BLACK):
-                                        selecionado = square; sound_manager.play('move')
-                                    else:
-                                        selecionado = None
+                    # Reseta o estado de arrastar
+                    dragging = False
+                    dragged_piece = None
+                    dragged_from_square = None
 
             # --- ESTADO: GAME OVER (NOVO) ---
             elif estado_atual == ESTADO_GAME_OVER:
@@ -1678,15 +1724,31 @@ def main():
             screen.blit(fonte_btn.render("Pretas", True, (255,255,255)), (480, 340))
 
         elif estado_atual == ESTADO_JOGANDO:
-            display_board.draw(engine.board)
+            # Se uma peça estiver sendo arrastada, não a desenha na sua casa de origem
+            skip = dragged_from_square if dragging else None
+            display_board.draw(engine.board, skip_square=skip)
+            
             eval_bar.draw(screen)
+
+            # Mostra os movimentos válidos para a peça selecionada/arrastada
             if selecionado is not None:
+                # Highlight do quadrado selecionado
                 c = chess.square_file(selecionado)
                 r = 7 - chess.square_rank(selecionado)
                 if display_board.is_flipped: c, r = 7-c, 7-r
                 s = pygame.Surface((80, 80)); s.set_alpha(100); s.fill((255, 255, 0))
                 screen.blit(s, (c*80, r*80))
+                
+                # Desenha os círculos de movimento
                 display_board.draw_valid_moves(engine.board, selecionado)
+            
+            # --- LÓGICA DE DESENHO DA PEÇA ARRASTADA ---
+            if dragging and dragged_piece:
+                img = display_board.images.get((dragged_piece.piece_type, dragged_piece.color))
+                if img:
+                    # Centraliza a imagem no cursor do mouse
+                    mouse_pos = pygame.mouse.get_pos()
+                    screen.blit(img, (mouse_pos[0] - 40, mouse_pos[1] - 40))
             
             # Painel Lateral Jogo
             pygame.draw.rect(screen, (60, 60, 60), (660, 0, 180, 640))
