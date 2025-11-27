@@ -231,6 +231,7 @@ def main():
     sim_speed = 1000
     sim_timer = 0
     sim_headers = {}
+    pgn_scroll_y = 0
 
     # --- Botões do Menu (definidos uma vez) ---
     btn_x = 480
@@ -375,30 +376,48 @@ def main():
 
             # --- ESTADO: PGN SELECT ---
             elif estado_atual == ESTADO_PGN_SELECT:
+                arquivos = pgn_manager.list_files()
+                # A altura da área visível da lista (de y=120 a y=500-20=480)
+                list_view_height = 360 
+                max_scroll = max(0, len(arquivos) * 45 - list_view_height)
+
+                if event.type == pygame.MOUSEWHEEL:
+                    pgn_scroll_y -= event.y * 25 # Ajusta a sensibilidade do scroll
+                    pgn_scroll_y = max(0, min(pgn_scroll_y, max_scroll))
+                
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     mouse_pos = event.pos
-                    arquivos = pgn_manager.list_files()
                     y_start = 120
                     
-                    # Clique na lista
-                    for i, arq in enumerate(arquivos):
-                        if i > 10: break
-                        rect = pygame.Rect(220, y_start + i*45, 400, 40)
-                        if rect.collidepoint(mouse_pos):
-                            sim_moves, sim_headers = pgn_manager.load_game_moves(arq)
-                            engine.board.reset()
-                            sim_index = 0
-                            sim_auto = False
-                            sim_timer = 0
-                            if sim_moves:
-                                estado_atual = ESTADO_SIMULACAO
-                                sound_manager.play('menu')
+                    # Define a área clicável da lista
+                    list_rect = pygame.Rect(220, y_start, 400, list_view_height)
+
+                    # Verifica se o clique foi dentro da lista
+                    if list_rect.collidepoint(mouse_pos):
+                        for i, arq in enumerate(arquivos):
+                            # Calcula a posição do item considerando o scroll
+                            item_y = y_start + i * 45 - pgn_scroll_y
+                            item_rect = pygame.Rect(220, item_y, 400, 40)
+                            
+                            # Verifica o clique no item específico
+                            if item_rect.collidepoint(mouse_pos):
+                                sim_moves, sim_headers = pgn_manager.load_game_moves(arq)
+                                engine.board.reset()
+                                sim_index = 0
+                                sim_auto = False
+                                sim_timer = 0
+                                if sim_moves:
+                                    pgn_scroll_y = 0 # Reseta o scroll
+                                    estado_atual = ESTADO_SIMULACAO
+                                    sound_manager.play('menu')
+                                break 
 
                     # Botões inferiores
                     btn_abrir = pygame.Rect(220, 500, 200, 40)
                     btn_voltar = pygame.Rect(440, 500, 200, 40)
 
                     if btn_voltar.collidepoint(mouse_pos):
+                        pgn_scroll_y = 0 # Reseta o scroll ao sair
                         sound_manager.play('menu')
                         estado_atual = ESTADO_MENU
                     elif btn_abrir.collidepoint(mouse_pos):
@@ -416,6 +435,7 @@ def main():
                                     sim_headers = dict(game.headers)
                                     f.close()
                                     if sim_moves:
+                                        pgn_scroll_y = 0 # Reseta
                                         engine.board.reset()
                                         sim_index = 0
                                         sim_auto = False
@@ -1215,17 +1235,61 @@ def main():
             
             arquivos = pgn_manager.list_files()
             y_start = 120
+            list_view_height = 360 # Altura visível da lista (120 a 480)
+            item_height = 45
+            
+            list_area = pygame.Rect(220, y_start, 400, list_view_height)
+            
+            # Fundo para a área da lista
+            pygame.draw.rect(screen, (25, 25, 30), list_area)
+            
             if not arquivos:
-                screen.blit(fonte_small.render("Nenhum arquivo em data/pgn/", True, (150,150,150)), (250, 200))
-            
-            mouse_pos = pygame.mouse.get_pos()
-            for i, arq in enumerate(arquivos):
-                if i > 10: break
-                rect = pygame.Rect(220, y_start + i*45, 400, 40)
-                cor = (80, 100, 120) if rect.collidepoint(mouse_pos) else (60, 80, 100)
-                pygame.draw.rect(screen, cor, rect, border_radius=5)
-                screen.blit(fonte_small.render(arq, True, (255,255,255)), (rect.x+10, rect.y+10))
-            
+                screen.blit(fonte_small.render("Nenhum arquivo PGN encontrado.", True, (150,150,150)), (250, 200))
+            else:
+                # Cria uma subsuperfície para recortar o conteúdo da lista
+                # Isso garante que os itens não "vazem" para fora da área visível
+                clipping_area = screen.subsurface(list_area)
+                
+                mouse_pos = pygame.mouse.get_pos()
+                
+                for i, arq in enumerate(arquivos):
+                    # Posição do item relativa à área de clipping, com o scroll aplicado
+                    item_y_rel = i * item_height - pgn_scroll_y
+                    
+                    # Só desenha o que está visível na área
+                    if item_y_rel < list_view_height and item_y_rel + item_height > 0:
+                        item_rect_rel = pygame.Rect(0, item_y_rel, 400, 40)
+                        
+                        # Posição do mouse relativa à area de clipping
+                        local_mouse_pos = (mouse_pos[0] - list_area.x, mouse_pos[1] - list_area.y)
+
+                        cor = (80, 100, 120) if item_rect_rel.collidepoint(local_mouse_pos) else (60, 80, 100)
+                        pygame.draw.rect(clipping_area, cor, item_rect_rel, border_radius=5)
+                        
+                        text_surf = fonte_small.render(arq, True, (255,255,255))
+                        clipping_area.blit(text_surf, (10, item_y_rel + 10))
+
+                # --- Barra de Rolagem ---
+                total_content_height = len(arquivos) * item_height
+                if total_content_height > list_view_height:
+                    scrollbar_area = pygame.Rect(list_area.right + 5, list_area.y, 15, list_area.height)
+                    
+                    # Fundo da barra
+                    pygame.draw.rect(screen, (40, 40, 45), scrollbar_area, border_radius=7)
+                    
+                    # Handle (a parte que se move)
+                    handle_height = max(30, list_view_height * (list_view_height / total_content_height))
+                    
+                    # Evita divisão por zero se o conteúdo for menor que a área
+                    scrollable_dist = total_content_height - list_view_height
+                    scroll_ratio = pgn_scroll_y / scrollable_dist if scrollable_dist > 0 else 0
+                    
+                    handle_y = scrollbar_area.y + scroll_ratio * (list_view_height - handle_height)
+                    
+                    handle_rect = pygame.Rect(scrollbar_area.x, handle_y, 15, handle_height)
+                    pygame.draw.rect(screen, (130, 130, 130), handle_rect, border_radius=7)
+
+            # Botões (fora do 'else' para sempre serem desenhados)
             btn_abrir = pygame.Rect(220, 500, 200, 40)
             pygame.draw.rect(screen, (60, 120, 60), btn_abrir, border_radius=8)
             lbl = fonte_btn.render("Abrir Arquivo", True, (255,255,255))

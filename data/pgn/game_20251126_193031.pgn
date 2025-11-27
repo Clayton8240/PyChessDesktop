@@ -1,0 +1,10 @@
+[Event "Partida Casual PyChess"]
+[Site "Local"]
+[Date "2025.11.26"]
+[Round "1"]
+[White "Jogador"]
+[Black "Computador"]
+[Result "1-0"]
+
+1. d4 h6 2. e4 d5 3. exd5 Qxd5 4. c3 f5 5. c4 Qe4+ 6. Qe2 Qh4 7. d5 Qxh2 8. f4 b6 9. b4 Bb7 10. c5 Nc6 11. cxb6 Na5 12. bxa5 Rc8 13. bxc7 g5 14. fxg5 Ba6 15. a4 Qh3 16. gxh3 f4 17. Bxf4 Bg7 18. gxh6 Bc4 19. Qxc4 Bxh6 20. Bxh6 Rh7 21. a6 Ra8 22. c8=Q+ Kf7 23. Qxa8 Nxh6 24. Qxa7 Kg7 25. Qxe7+ Kh8 26. Qxh7+ Kxh7 27. Qd4 Nf5 28. Qe5 Ng7 29. h4 Nf5 30. Qxf5+ Kg7 31. Qf7+ Kh6 32. h5 Kg5 33. Qf5+ Kh6 34. Qg6# 1-0
+

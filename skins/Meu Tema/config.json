@@ -1,0 +1,13 @@
+{
+    "name": "Meu Tema",
+    "light_color": [
+        255,
+        255,
+        255
+    ],
+    "dark_color": [
+        0,
+        121,
+        0
+    ]
+}
