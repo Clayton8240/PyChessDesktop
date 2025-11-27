@@ -1,0 +1,40 @@
+INSTRUÇÕES PARA CRIAÇÃO DE SKINS - MY CHESS
+
+1. Estrutura da pasta da skin
+Cada skin deve estar em uma pasta própria, por exemplo:
+MinhaSkin/
+
+Dentro dessa pasta, é necessário ter:
+- config.json (arquivo de configuração da skin)
+- pieces/ (pasta com as imagens das peças)
+- (opcional) Imagens de tabuleiro ou outros elementos gráficos
+
+2. Arquivo config.json
+Exemplo de conteúdo:
+{
+  "name": "Nome da Skin",
+  "light_color": [240, 217, 181],  // RGB da casa clara
+  "dark_color": [181, 136, 99]     // RGB da casa escura
+}
+
+3. Imagens das peças
+Na pasta pieces/, coloque as imagens das peças com os seguintes nomes (pode ser PNG, SVG, JPG):
+- w_p.png (peão branco)
+- w_n.png (cavalo branco)
+- w_b.png (bispo branco)
+- w_r.png (torre branco)
+- w_q.png (rainha branca)
+- w_k.png (rei branco)
+- b_p.png (peão preto)
+- b_n.png (cavalo preto)
+- b_b.png (bispo preto)
+- b_r.png (torre preta)
+- b_q.png (rainha preta)
+- b_k.png (rei preto)
+
+4. Tamanho recomendado das imagens
+- Peças: 80x80 pixels (ou maior, mas quadrado)
+- Tabuleiro (opcional): 640x640 pixels
+
+5. Compactação para importação
+Compacte a pasta da skin (com todos os arquivos e subpastas) em um arquivo ZIP para facilitar a importação pelo menu do jogo.
