@@ -18,6 +18,25 @@ from src.skin_manager import SkinManager
 from src.config_manager import ConfigManager
 from src.tutorial_manager import TutorialManager
 
+def ajustar_diretorio_trabalho():
+    """
+    Garante que o jogo use a pasta onde o .exe está localizado
+    como diretório raiz, permitindo salvar dados e carregar skins.
+    """
+    if getattr(sys, 'frozen', False):
+        # Se estiver rodando compilado (Nuitka/PyInstaller)
+        # Pega o diretório onde o arquivo .exe está
+        application_path = os.path.dirname(sys.executable)
+    else:
+        # Se estiver rodando no VS Code / Terminal
+        application_path = os.path.dirname(os.path.abspath(__file__))
+    
+    # Muda o diretório de trabalho para lá
+    os.chdir(application_path)
+
+# Chame logo no início
+ajustar_diretorio_trabalho()
+
 # Função auxiliar para calcular material
 def calcular_material(board, is_white_player):
     valores = {chess.PAWN: 1, chess.KNIGHT: 3, chess.BISHOP: 3, chess.ROOK: 5, chess.QUEEN: 9}
