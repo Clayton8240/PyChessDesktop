@@ -4,11 +4,18 @@ import os
 import json
 
 
+
+from src.config import get_user_data_dir
+from src.utils.skin_utils import get_all_skin_folders
+
 class SkinManager:
     def __init__(self, base_folder="skins"):
         self.base_folder = base_folder
-        # Garante que a pasta existe
+        # Garante que a pasta local existe
         os.makedirs(self.base_folder, exist_ok=True)
+        # Garante que a pasta AppData/skins existe
+        self.user_skins_folder = os.path.join(get_user_data_dir(), "skins")
+        os.makedirs(self.user_skins_folder, exist_ok=True)
         self.skins = {} # Dicionário { 'nome_da_skin': dados_da_skin }
         self.reload_skins()
 
@@ -16,6 +23,7 @@ class SkinManager:
         """
         Importa uma skin a partir de um arquivo ZIP.
         O ZIP deve conter uma pasta com um config.json válido e, opcionalmente, imagens de peças/tabuleiro.
+        A skin será importada para a pasta AppData/skins.
         """
         if not zipfile.is_zipfile(zip_path):
             raise ValueError("Arquivo não é um ZIP válido.")
@@ -29,10 +37,10 @@ class SkinManager:
                     if 'config.json' in files:
                         # Nome da skin = nome da pasta onde está o config.json
                         skin_folder = os.path.basename(root)
-                        dest_folder = os.path.join(self.base_folder, skin_folder)
+                        dest_folder = os.path.join(self.user_skins_folder, skin_folder)
                         if os.path.exists(dest_folder):
                             raise FileExistsError(f"Já existe uma skin chamada '{skin_folder}'.")
-                        # Copia tudo para a pasta de skins
+                        # Copia tudo para a pasta de skins do usuário
                         import shutil
                         shutil.copytree(root, dest_folder)
                         # Se houver subpasta 'pieces' ou imagens soltas, move para dentro da skin
@@ -50,9 +58,8 @@ class SkinManager:
                 raise FileNotFoundError("Nenhum config.json encontrado no ZIP.")
 
     def reload_skins(self):
-        """Escaneia a pasta skins em busca de subpastas válidas."""
+        """Escaneia as pastas de skins locais e AppData em busca de subpastas válidas."""
         self.skins = {}
-        
         # 1. Adiciona a skin padrão (Default) para garantir que o jogo nunca quebre
         self.skins['default'] = {
             'name': 'Padrão (Madeira)',
@@ -61,29 +68,23 @@ class SkinManager:
             'path': 'assets/images/pieces' # Caminho interno original
         }
 
-        # 2. Procura pastas novas
-        if not os.path.exists(self.base_folder): return
-
-        for item in os.listdir(self.base_folder):
-            skin_path = os.path.join(self.base_folder, item)
-            
-            # Verifica se é uma pasta e se tem o arquivo de configuração
-            if os.path.isdir(skin_path):
-                config_file = os.path.join(skin_path, 'config.json')
-                if os.path.exists(config_file):
-                    try:
-                        with open(config_file, 'r', encoding='utf-8') as f:
-                            data = json.load(f)
-                            
-                            # Validação básica
-                            self.skins[item] = {
-                                'name': data.get('name', item),
-                                'light': tuple(data.get('light_color', (255, 255, 255))),
-                                'dark': tuple(data.get('dark_color', (0, 0, 0))),
-                                'path': skin_path # Onde estão as imagens
-                            }
-                    except Exception as e:
-                        print(f"Erro ao carregar skin {item}: {e}")
+        # 2. Procura pastas novas em ambos os diretórios
+        for skin_path in get_all_skin_folders(self.base_folder):
+            item = os.path.basename(skin_path)
+            config_file = os.path.join(skin_path, 'config.json')
+            if os.path.exists(config_file):
+                try:
+                    with open(config_file, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        # Validação básica
+                        self.skins[item] = {
+                            'name': data.get('name', item),
+                            'light': tuple(data.get('light_color', (255, 255, 255))),
+                            'dark': tuple(data.get('dark_color', (0, 0, 0))),
+                            'path': skin_path # Onde estão as imagens
+                        }
+                except Exception as e:
+                    print(f"Erro ao carregar skin {item}: {e}")
 
     def get_skin_data(self, skin_id):
         return self.skins.get(skin_id, self.skins['default'])
