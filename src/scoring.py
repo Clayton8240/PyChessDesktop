@@ -2,6 +2,7 @@
 import json
 import os
 from typing import List, Dict
+from src.config import get_user_data_dir # <--- ADICIONE ISTO
 
 class ScoreManager:
 	def _get_stats_path(self):
@@ -16,7 +17,7 @@ class ScoreManager:
 		try:
 			with open(stats_path, 'r', encoding='utf-8') as f:
 				return json.load(f)
-		except:
+		except Exception:
 			return {"wins": 0, "losses": 0, "draws": 0, "games_played": 0}
 
 	def update_stats(self, result):
@@ -54,9 +55,10 @@ class ScoreManager:
 			
 	def __init__(self, scores_path=None):
 		if scores_path is None:
-			base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-			scores_path = os.path.join(base_dir, 'data', 'scores.json')
+			scores_path = os.path.join(get_user_data_dir(), 'scores.json')
 		self.scores_path = scores_path
+		# Garante que a pasta existe (caso seja a primeira vez rodando)
+		os.makedirs(os.path.dirname(self.scores_path), exist_ok=True)
 
 	def calcular_pontuacao(self, resultado_tipo: str, material_restante: int, tempo_gasto: int, dificuldade: int = 2) -> int:
 		"""

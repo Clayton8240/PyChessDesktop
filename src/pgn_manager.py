@@ -3,15 +3,19 @@ import chess.pgn
 import os
 from datetime import datetime
 
+from src.config import get_user_data_dir # <--- ADICIONE ISTO
 class PGNManager:
-    def __init__(self, data_dir="data/pgn"):
-        self.data_dir = data_dir
+    def __init__(self, data_dir=None):
+        if data_dir is None:
+            # Salva na pasta 'pgn' dentro do AppData do usuário
+            self.data_dir = os.path.join(get_user_data_dir(), "pgn")
+        else:
+            self.data_dir = data_dir
         os.makedirs(self.data_dir, exist_ok=True)
 
-    def save_game(self, board, white_name="Jogador", black_name="Computador", result="*"):
+    def save_game(self, board, white_name, black_name, result):
         """Salva o histórico do tabuleiro atual em um arquivo PGN."""
         game = chess.pgn.Game()
-        
         # Cabeçalhos obrigatórios
         game.headers["Event"] = "Partida Casual PyChess"
         game.headers["Site"] = "Local"
@@ -29,10 +33,10 @@ class PGNManager:
         # Gera nome de arquivo único
         filename = f"game_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pgn"
         filepath = os.path.join(self.data_dir, filename)
-        
+
         with open(filepath, "w", encoding="utf-8") as f:
             print(game, file=f, end="\n\n")
-        
+
         return filename
 
     def list_files(self):

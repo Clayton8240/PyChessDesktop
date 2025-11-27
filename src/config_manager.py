@@ -1,9 +1,16 @@
+
 import json
 import os
+from src.config import get_user_data_dir  # <--- IMPORTANTE
 
 class ConfigManager:
-    def __init__(self, filepath="data/settings.json"):
-        self.filepath = filepath
+    def __init__(self, filepath=None):
+        # Se nenhum caminho for passado, usa o AppData
+        if filepath is None:
+            self.filepath = os.path.join(get_user_data_dir(), "settings.json")
+        else:
+            self.filepath = filepath
+
         # Configurações Padrão
         self.defaults = {
             "volume_master": 0.5,  # 0.0 a 1.0

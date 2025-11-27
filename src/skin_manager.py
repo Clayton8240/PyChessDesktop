@@ -1,5 +1,8 @@
+import zipfile
+import tempfile
 import os
 import json
+
 
 class SkinManager:
     def __init__(self, base_folder="skins"):
@@ -8,6 +11,43 @@ class SkinManager:
         os.makedirs(self.base_folder, exist_ok=True)
         self.skins = {} # Dicionário { 'nome_da_skin': dados_da_skin }
         self.reload_skins()
+
+    def importar_skin_zip(self, zip_path):
+        """
+        Importa uma skin a partir de um arquivo ZIP.
+        O ZIP deve conter uma pasta com um config.json válido e, opcionalmente, imagens de peças/tabuleiro.
+        """
+        if not zipfile.is_zipfile(zip_path):
+            raise ValueError("Arquivo não é um ZIP válido.")
+
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            # Extrai para uma pasta temporária
+            with tempfile.TemporaryDirectory() as tmpdirname:
+                zip_ref.extractall(tmpdirname)
+                # Procura por uma pasta com config.json
+                for root, dirs, files in os.walk(tmpdirname):
+                    if 'config.json' in files:
+                        # Nome da skin = nome da pasta onde está o config.json
+                        skin_folder = os.path.basename(root)
+                        dest_folder = os.path.join(self.base_folder, skin_folder)
+                        if os.path.exists(dest_folder):
+                            raise FileExistsError(f"Já existe uma skin chamada '{skin_folder}'.")
+                        # Copia tudo para a pasta de skins
+                        import shutil
+                        shutil.copytree(root, dest_folder)
+                        # Se houver subpasta 'pieces' ou imagens soltas, move para dentro da skin
+                        for sub in ['pieces', 'tabuleiro', 'board']:
+                            sub_path = os.path.join(root, sub)
+                            if os.path.isdir(sub_path):
+                                dest_sub = os.path.join(dest_folder, sub)
+                                shutil.move(sub_path, dest_sub)
+                        # Também move imagens soltas (png/svg) para a pasta da skin
+                        for f in files:
+                            if f.lower().endswith(('.png', '.svg', '.jpg', '.jpeg')):
+                                shutil.move(os.path.join(root, f), os.path.join(dest_folder, f))
+                        self.reload_skins()
+                        return skin_folder
+                raise FileNotFoundError("Nenhum config.json encontrado no ZIP.")
 
     def reload_skins(self):
         """Escaneia a pasta skins em busca de subpastas válidas."""
