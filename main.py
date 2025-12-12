@@ -130,6 +130,23 @@ def desenhar_texto_quebrado(screen, text, color, rect, font, aa=True, bkg=None):
         
     return text
 
+def selecionar_pacote_skin():
+    """Abre uma janela de diálogo para selecionar o arquivo .zip da skin."""
+    # Cria uma janela raiz oculta do Tkinter (para não aparecer uma janela vazia feia)
+    root = tk.Tk()
+    root.withdraw() 
+    
+    # Garante que a janela apareça na frente do Pygame
+    root.attributes('-topmost', True)
+    
+    file_path = filedialog.askopenfilename(
+        title="Selecione o pacote de Skin (.zip)",
+        filetypes=[("Arquivos Zip", "*.zip"), ("Todos os arquivos", "*.*")]
+    )
+    
+    root.destroy() # Limpa a janela do Tkinter
+    return file_path
+
 def main():
     pygame.init()
     
@@ -176,10 +193,13 @@ def main():
     
     # UI Components
     skin_manager = SkinManager() # Escaneia as pastas
-    current_skin_id = 'default'
     
-    # Passa os dados da skin inicial
-    display_board = DisplayBoard(screen, tamanho_quadrado=80, skin_data=skin_manager.get_skin_data('default'))
+    # Tenta pegar a skin salva, ou usa 'default' se não existir
+    saved_skin = config_manager.get("active_skin") 
+    current_skin_id = saved_skin if saved_skin else 'default'
+    
+    # Passa os dados da skin salva
+    display_board = DisplayBoard(screen, tamanho_quadrado=80, skin_data=skin_manager.get_skin_data(current_skin_id))
     eval_bar = EvaluationBar(pygame.Rect(640, 0, 20, 640))
     input_nome = TextInput(pygame.font.SysFont("consolas", 30), rect=pygame.Rect(170, 300, 300, 50))
     
@@ -667,29 +687,43 @@ def main():
                             # Carrega os dados e aplica no tabuleiro
                             dados = skin_manager.get_skin_data(skin_id)
                             display_board.set_skin(dados)
+                            
+                            # Salva a skin escolhida
+                            config_manager.set("active_skin", skin_id)
+                            
                             sound_manager.play('menu')
 
                     # Botão Voltar
-                    btn_voltar = pygame.Rect(430, 550, 190, 40)
+                    btn_voltar = pygame.Rect(320, 550, 190, 40)
                     if btn_voltar.collidepoint(event.pos):
                         estado_atual = ESTADO_MENU
                         sound_manager.play('menu')
                         
-                    # Botão Abrir Pasta (Quality of Life)
-                    btn_folder = pygame.Rect(220, 550, 190, 40)
-                    if btn_folder.collidepoint(event.pos):
-                        folder_path = skin_manager.base_folder
-                        try:
-                            if sys.platform == "win32":
-                                os.startfile(folder_path)
-                            elif sys.platform == "darwin":
-                                subprocess.run(["open", folder_path])
-                            else: # linux
-                                subprocess.run(["xdg-open", folder_path])
-                        except FileNotFoundError:
-                            print(f"Could not open folder '{folder_path}'. Command not found.")
-                        except Exception as e:
-                            print(f"Error opening folder: {e}")
+                    # Botão Importar Skin
+                    btn_importar = pygame.Rect(100, 550, 190, 40)
+                    if btn_importar.collidepoint(event.pos):
+                        caminho_zip = selecionar_pacote_skin()
+                        if caminho_zip:
+                            try:
+                                nome_nova_skin = skin_manager.importar_skin_zip(caminho_zip)
+                                print(f"Sucesso! Skin '{nome_nova_skin}' instalada.")
+                                # Já mudar para a skin nova imediatamente
+                                novo_dados = skin_manager.get_skin_data(nome_nova_skin)
+                                display_board.set_skin(novo_dados)
+                                current_skin_id = nome_nova_skin
+                                
+                                # Salva a skin importada
+                                config_manager.set("active_skin", nome_nova_skin)
+                                
+                                # Feedback visual
+                                aviso_texto = f"Skin '{nome_nova_skin}' importada com sucesso!"
+                                aviso_timer = pygame.time.get_ticks() + 3000
+                                sound_manager.play('game_over')
+                            except Exception as e:
+                                print(f"Erro ao importar skin: {e}")
+                                aviso_texto = f"Erro ao importar skin: {str(e)}"
+                                aviso_timer = pygame.time.get_ticks() + 5000
+                                sound_manager.play('defeat')
 
                     # Adicione um botão "CRIAR NOVO"
                     btn_criar = pygame.Rect(630, 550, 150, 40)
@@ -718,6 +752,10 @@ def main():
                         # Aplica e volta
                         display_board.set_skin(skin_manager.get_skin_data(new_id))
                         current_skin_id = new_id
+                        
+                        # Salva a nova skin criada
+                        config_manager.set("active_skin", new_id)
+                        
                         estado_atual = ESTADO_TEMA
                         sound_manager.play('game_over') # Sucesso
                         
@@ -1489,16 +1527,16 @@ def main():
                 # Para simplificar a resposta, vou colocar a detecção aqui se você estiver usando 
                 # a estrutura "desenho separado". Se for a estrutura "eventos separados", mova isso:
             
-            # Botão "Abrir Pasta de Skins" (Para ajudar o usuário)
-            btn_folder = pygame.Rect(220, 550, 190, 40)
-            pygame.draw.rect(screen, (100, 100, 150), btn_folder, border_radius=8)
-            screen.blit(fonte_small.render("Abrir Pasta", True, WHITE), (btn_folder.x+50, btn_folder.y+10))
+            # Botão "Importar Skin"
+            btn_importar = pygame.Rect(100, 550, 190, 40)
+            pygame.draw.rect(screen, (100, 150, 100), btn_importar, border_radius=8)
+            screen.blit(fonte_small.render("Importar Skin", True, WHITE), (btn_importar.x+40, btn_importar.y+10))
 
-            btn_voltar = pygame.Rect(430, 550, 190, 40)
+            btn_voltar = pygame.Rect(320, 550, 190, 40)
             pygame.draw.rect(screen, (150, 50, 50), btn_voltar, border_radius=8)
             screen.blit(fonte_small.render("Voltar", True, WHITE), (btn_voltar.x+70, btn_voltar.y+10))
             
-            btn_criar = pygame.Rect(630, 550, 150, 40)
+            btn_criar = pygame.Rect(520, 550, 150, 40)
             pygame.draw.rect(screen, (50, 150, 50), btn_criar, border_radius=8)
             screen.blit(fonte_small.render("Criar Novo", True, WHITE), (btn_criar.x+40, btn_criar.y+10))
 

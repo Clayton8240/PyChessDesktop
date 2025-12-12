@@ -1,2 +1,35 @@
 # Arquivos de script de desenvolvimento
 tools/
+
+# Arquivos de cache do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Arquivos de configuração do usuário
+data/settings.json
+data/scores.json
+data/stats.json
+
+# Arquivos temporários
+*.tmp
+*.temp
+*.log
+*.bak
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Arquivos de distribuição
+dist/
+build/
+*.spec
+*.exe
